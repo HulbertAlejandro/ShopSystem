@@ -75,7 +75,7 @@ public class CuentaServicioImpl implements CuentaServicio {
     @Override
     public void crearCuenta(CrearCuentaDTO cuenta) throws Exception {
 
-        System.out.println(cuenta.nombre() + "  " + cuenta.correo());
+        System.out.println("Datos de la cuenta que ingresaron: "+ cuenta.password() + "  " + cuenta.confirmaPassword());
 
         if (existeCedula(cuenta.cedula())) {
             throw new Exception("Ya existe una cuenta con esta cedula");
@@ -116,11 +116,15 @@ public class CuentaServicioImpl implements CuentaServicio {
 
         cuentaRepo.save(nuevaCuenta);
 
-        // Enviar correo de activación solo si no es administrador
-        if (!"admin@gmail.com".equals(cuenta.correo())) {
-            emailServicio.enviarCorreo(new EmailDTO("Codigo de activación de cuenta de Aseguradora LAYO",
-                    "El código de activación asignado para activar la cuenta es el siguiente: " + codigoActivacion, nuevaCuenta.getEmail()));
-        }
+        // NESTOR CASTELBLANCO 2/03/25
+        // COMENTE LA LINEAS DE ABAJO YA QUE SE ROMPÍA EL BACKEND AL ENVIAR EL CORREO
+
+
+//        // Enviar correo de activación solo si no es administrador
+//        if (!"admin@gmail.com".equals(cuenta.correo())) {
+//            emailServicio.enviarCorreo(new EmailDTO("Codigo de activación de cuenta de Aseguradora LAYO",
+//                    "El código de activación asignado para activar la cuenta es el siguiente: " + codigoActivacion, nuevaCuenta.getEmail()));
+//        }
 
     }
 
