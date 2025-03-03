@@ -26,7 +26,7 @@ public class EmailServicioImpl implements EmailServicio {
         String destinatarioLimpio = emailDTO.destinatario().trim().replace("\"", "");
 
         Email email = EmailBuilder.startingBlank()
-                .from("aseguradoralayo@gmail.com")
+                .from("supermercadossg@gmail.com")
                 .to(destinatarioLimpio)
                 //.cc("assdsds", "sdsdsdsd", "aasasas")
                 .withSubject(emailDTO.asunto())
@@ -34,7 +34,7 @@ public class EmailServicioImpl implements EmailServicio {
                 .buildEmail();
 
         try (Mailer mailer = MailerBuilder
-                .withSMTPServer("smtp.gmail.com", 587, "aseguradoralayo@gmail.com", "malx djiy tewv bdud") // Correo como usuario SMTP
+                .withSMTPServer("smtp.gmail.com", 587, "supermercadossg@gmail.com", "ckdj zwcs eerl qpeh") // Correo como usuario SMTP
                 .withTransportStrategy(TransportStrategy.SMTP_TLS)
                 .withDebugLogging(true)
                 .buildMailer()) {

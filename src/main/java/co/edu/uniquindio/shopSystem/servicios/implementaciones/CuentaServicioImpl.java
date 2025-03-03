@@ -120,11 +120,11 @@ public class CuentaServicioImpl implements CuentaServicio {
         // COMENTE LA LINEAS DE ABAJO YA QUE SE ROMPÍA EL BACKEND AL ENVIAR EL CORREO
 
 
-//        // Enviar correo de activación solo si no es administrador
-//        if (!"admin@gmail.com".equals(cuenta.correo())) {
-//            emailServicio.enviarCorreo(new EmailDTO("Codigo de activación de cuenta de Aseguradora LAYO",
-//                    "El código de activación asignado para activar la cuenta es el siguiente: " + codigoActivacion, nuevaCuenta.getEmail()));
-//        }
+        // Enviar correo de activación solo si no es administrador
+        if (!"admin@gmail.com".equals(cuenta.correo())) {
+            emailServicio.enviarCorreo(new EmailDTO("Codigo de activación de cuenta de SG Supermercados",
+                    "El código de activación asignado para activar la cuenta es el siguiente: " + codigoActivacion, nuevaCuenta.getEmail()));
+        }
 
     }
 
