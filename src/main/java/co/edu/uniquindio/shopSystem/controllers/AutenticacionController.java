@@ -1,9 +1,6 @@
 package co.edu.uniquindio.shopSystem.controllers;
 
-import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.CrearCuentaDTO;
-import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.EditarCuentaDTO;
-import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.InformacionCuentaDTO;
-import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.LoginDTO;
+import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.MensajeDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.CuentaServicio;
@@ -36,6 +33,12 @@ public class AutenticacionController {
     @PutMapping("/editar-perfil")
     public void editarCuenta(EditarCuentaDTO cuenta) throws Exception{
         cuentaServicio.editarCuenta(cuenta);
+    }
+
+    @PutMapping("/verificar-sesion")
+    public ResponseEntity<MensajeDTO<TokenDTO>> verificarSesion(@Valid @RequestBody VerificacionDTO verificacionDTO) throws Exception {
+        TokenDTO token = cuentaServicio.verificarCuenta(verificacionDTO);
+        return ResponseEntity.ok(new MensajeDTO<>(false, token));
     }
 
     @DeleteMapping("/eliminar/{id}")

@@ -7,7 +7,7 @@ plugins {
 
 group = 'co.edu.uniquindio'
 version = '0.0.1-SNAPSHOT'
-description = 'Sistema Inteligente de Gestión y Optimización para Supermercados'
+description = 'SG Supermercados'
 
 
 java {
@@ -30,6 +30,10 @@ repositories {
 
 
 dependencies {
+
+    implementation 'com.google.zxing:core:3.4.1'
+    implementation 'com.google.zxing:javase:3.4.1'
+
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.projectlombok:lombok'

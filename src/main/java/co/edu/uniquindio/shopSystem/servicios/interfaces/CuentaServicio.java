@@ -26,4 +26,6 @@ public interface CuentaServicio {
     List<ItemCuentaDTO> listarCuentas() throws Exception;
 
     String activarCuenta(ValidarCuentaDTO validarCuentaDTO) throws Exception;
+
+    TokenDTO verificarCuenta(VerificacionDTO verificacionDTO) throws Exception;
 }

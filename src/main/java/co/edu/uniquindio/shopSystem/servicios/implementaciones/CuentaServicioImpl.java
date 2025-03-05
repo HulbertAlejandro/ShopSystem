@@ -291,6 +291,29 @@ public class CuentaServicioImpl implements CuentaServicio {
 
             // Genera el token
             Map<String, Object> map = construirClaims(cuenta);
+            //Envia el correo del codigo para iniciar sesion
+
+
+            String codigoActivacion = generarCodigoValidacion();
+            cuenta.setCodigoValidacionSesion(
+                    new CodigoValidacion(
+                            codigoActivacion,
+                            LocalDateTime.now()
+                    )
+            );
+
+            cuentaRepo.save(cuenta);
+
+            // NESTOR CASTELBLANCO 2/03/25
+            // COMENTE LA LINEAS DE ABAJO YA QUE SE ROMPÍA EL BACKEND AL ENVIAR EL CORREO
+
+
+            // Enviar correo de activación solo si no es administrador
+            if (!"admin@gmail.com".equals(cuenta.getEmail())) {
+                emailServicio.enviarCorreo(new EmailDTO("Codigo de verificacion para iniciar sesion en SG Supermercados",
+                        "El código de verificacion asignado para activar la cuenta es el siguiente: " + codigoActivacion, cuenta.getEmail()));
+            }
+
             return new TokenDTO(jwtUtils.generarToken(cuenta.getEmail(), map));
         } catch (Exception e) {
             // Registra el error completo
@@ -374,6 +397,56 @@ public class CuentaServicioImpl implements CuentaServicio {
 
         return "Se activo la cuenta correctamente";
     }
+
+    @Override
+    public TokenDTO verificarCuenta(VerificacionDTO verificacionDTO) throws Exception {
+        System.out.println(verificacionDTO.codigo() + " <--CODIGO/CORREO--> " + verificacionDTO.correo());
+
+        Optional<Cuenta> cuenta_activacion = cuentaRepo.buscarCuentaPorCorreo(verificacionDTO.correo());
+
+        if (cuenta_activacion.isEmpty()) {
+            throw new Exception("No se encuentra una cuenta con el correo ingresado");
+        }
+
+        Cuenta cuenta_usuario = cuenta_activacion.get();
+
+        if (cuenta_usuario.getEstadoCuenta() == EstadoCuenta.ELIMINADO) {
+            throw new Exception("La cuenta no está disponible en la plataforma");
+        }
+
+        if (cuenta_usuario.getEstadoCuenta() == EstadoCuenta.INACTIVO) {
+            throw new Exception("La cuenta no está activa");
+        }
+
+        if (cuenta_usuario.getCodigoValidacionSesion() == null ||
+                cuenta_usuario.getCodigoValidacionSesion().getCodigoValidacion() == null) {
+            throw new Exception("No hay código de validación registrado para esta cuenta");
+        }
+
+        System.out.println("fecha codigo ingresada : " + cuenta_usuario.getCodigoValidacionSesion().getCodigoValidacion() );
+        if (!cuenta_usuario.getCodigoValidacionSesion().getCodigoValidacion().equals(verificacionDTO.codigo())) {
+            throw new Exception("El código no es correcto");
+        }
+
+        if (cuenta_usuario.getCodigoValidacionRegistro() == null ||
+                cuenta_usuario.getCodigoValidacionRegistro().getFechaCreacion() == null) {
+            throw new Exception("No se encontró un código de registro válido");
+        }
+
+        if (cuenta_usuario.getCodigoValidacionSesion().getFechaCreacion().plusMinutes(15).isBefore(LocalDateTime.now())) {
+            System.out.println("ya expiró");
+            throw new Exception("Su código de verificación de ingreso ya expiró");
+        }
+
+        // Actualiza el código de sesión
+        cuenta_usuario.setCodigoValidacionSesion(new CodigoValidacion(verificacionDTO.codigo(), LocalDateTime.now()));
+        cuentaRepo.save(cuenta_usuario);
+
+        // Genera el token
+        Map<String, Object> map = construirClaims(cuenta_usuario);
+        return new TokenDTO(jwtUtils.generarToken(cuenta_usuario.getEmail(), map));
+    }
+
 
     public Cuenta obtenerCuenta(String email) throws Exception {
         Optional<Cuenta> cuentaOptional = cuentaRepo.buscarCuentaPorCorreo(email);

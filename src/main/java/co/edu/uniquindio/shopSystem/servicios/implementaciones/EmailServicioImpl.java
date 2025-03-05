@@ -34,7 +34,7 @@ public class EmailServicioImpl implements EmailServicio {
                 .buildEmail();
 
         try (Mailer mailer = MailerBuilder
-                .withSMTPServer("smtp.gmail.com", 587, "supermercadossg@gmail.com", "ckdj zwcs eerl qpeh") // Correo como usuario SMTP
+                .withSMTPServer("smtp.gmail.com", 587, "supermercadossg@gmail.com", "uojj dorx iyxf brek") // Correo como usuario SMTP
                 .withTransportStrategy(TransportStrategy.SMTP_TLS)
                 .withDebugLogging(true)
                 .buildMailer()) {
@@ -58,7 +58,7 @@ public class EmailServicioImpl implements EmailServicio {
 
         // Construir el correo
         Email email = EmailBuilder.startingBlank()
-                .from("aseguradoralayo@gmail.com")
+                .from("supermercadossg@gmail.com")
                 .to(destinatarioLimpio)
                 .withSubject(emailDTO.asunto())
                 .withPlainText(emailDTO.cuerpo())  // Texto plano (puedes cambiar a HTML si lo necesitas)
@@ -67,7 +67,7 @@ public class EmailServicioImpl implements EmailServicio {
 
         // Configurar el mailer y enviar el correo
         try (Mailer mailer = MailerBuilder
-                .withSMTPServer("smtp.gmail.com", 587, "aseguradoralayo@gmail.com", "malx djiy tewv bdud")
+                .withSMTPServer("smtp.gmail.com", 587, "supermercadossg@gmail.com", "uojj dorx iyxf brek")
                 .withTransportStrategy(TransportStrategy.SMTP_TLS)
                 .withDebugLogging(true)
                 .buildMailer()) {
@@ -87,14 +87,14 @@ public class EmailServicioImpl implements EmailServicio {
         String destinatarioLimpio = emailDTO.destinatario().trim().replace("\"", "");
 
         Email email = EmailBuilder.startingBlank()
-                .from("aseguradoralayoo@gmail.com")
+                .from("supermercadossg@gmail.com")
                 .to(destinatarioLimpio)
                 .withSubject(emailDTO.asunto())
                 .withPlainText(emailDTO.cuerpo())
                 .buildEmail();
 
         try (Mailer mailer = MailerBuilder
-                .withSMTPServer("smtp.gmail.com", 587, "aseguradoralayo@gmail.com", "malx djiy tewv bdud") // Correo como usuario SMTP
+                .withSMTPServer("smtp.gmail.com", 587, "supermercadossg@gmail.com", "uojj dorx iyxf brek") // Correo como usuario SMTP
                 .withTransportStrategy(TransportStrategy.SMTP_TLS)
                 .withDebugLogging(true)
                 .buildMailer()) {

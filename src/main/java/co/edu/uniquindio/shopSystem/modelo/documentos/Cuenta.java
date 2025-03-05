@@ -29,4 +29,5 @@ public class Cuenta{
     private LocalDateTime fechaRegistro;
     private CodigoValidacion codigoValidacionRegistro;
     private CodigoValidacion codigoValidacionPassword;
+    private CodigoValidacion codigoValidacionSesion;
 }
