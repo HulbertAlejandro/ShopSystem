@@ -53,6 +53,12 @@ public class AutenticacionController {
         return ResponseEntity.ok(new MensajeDTO<>(false, info));
     }
 
+    @PostMapping("/activar-cuenta")
+    public ResponseEntity<MensajeDTO<String>> activarCuenta(@Valid @RequestBody ValidarCuentaDTO cuenta) throws Exception{
+        cuentaServicio.activarCuenta(cuenta);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Cuenta activada exitosamente"));
+    }   
+
 
 }
 

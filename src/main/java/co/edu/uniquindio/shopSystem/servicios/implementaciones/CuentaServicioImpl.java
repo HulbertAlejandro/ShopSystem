@@ -363,9 +363,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         return claims;
     }
 
-
-
-
     @Override
     public String activarCuenta(ValidarCuentaDTO validarCuentaDTO) throws Exception {
         Optional<Cuenta> cuenta_activacion = cuentaRepo.buscarCuentaPorCorreo(validarCuentaDTO.correo());
