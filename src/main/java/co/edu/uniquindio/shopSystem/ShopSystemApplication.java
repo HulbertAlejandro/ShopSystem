@@ -10,3 +10,4 @@ public class ShopSystemApplication {
         SpringApplication.run(ShopSystemApplication.class, args);
     }
 }
+ 

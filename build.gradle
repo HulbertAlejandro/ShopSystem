@@ -11,9 +11,8 @@ description = 'SG Supermercados'
 
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
 }
 
 
@@ -49,9 +48,5 @@ dependencies {
     implementation 'org.simplejavamail:batch-module:8.10.1'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-}
-
-
-test {
-    useJUnitPlatform()
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
 }
