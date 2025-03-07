@@ -49,3 +49,5 @@ bin/
 /*/bin/
 /*/build/
 /build/
+
+src/main/resources/*.json

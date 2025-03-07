@@ -1,6 +1,8 @@
 package co.edu.uniquindio.shopSystem.modelo.documentos;
 
+import co.edu.uniquindio.shopSystem.modelo.enums.EstadoPedido;
 import co.edu.uniquindio.shopSystem.modelo.vo.DetalleCarrito;
+import co.edu.uniquindio.shopSystem.modelo.vo.DetallePedido;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
