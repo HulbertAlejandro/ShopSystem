@@ -10,3 +10,4 @@ public record InformacionCuentaDTO(
         String correo
 ) {
 }
+    

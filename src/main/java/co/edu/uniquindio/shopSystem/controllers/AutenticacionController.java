@@ -30,11 +30,6 @@ public class AutenticacionController {
         return ResponseEntity.ok(new MensajeDTO<>(false, "Cuenta creada exitosamente"));
     }
 
-    @PutMapping("/editar-perfil")
-    public void editarCuenta(EditarCuentaDTO cuenta) throws Exception{
-        cuentaServicio.editarCuenta(cuenta);
-    }
-
     @PutMapping("/verificar-sesion")
     public ResponseEntity<MensajeDTO<TokenDTO>> verificarSesion(@Valid @RequestBody VerificacionDTO verificacionDTO) throws Exception {
         TokenDTO token = cuentaServicio.verificarCuenta(verificacionDTO);
@@ -57,8 +52,13 @@ public class AutenticacionController {
     public ResponseEntity<MensajeDTO<String>> activarCuenta(@Valid @RequestBody ValidarCuentaDTO cuenta) throws Exception{
         cuentaServicio.activarCuenta(cuenta);
         return ResponseEntity.ok(new MensajeDTO<>(false, "Cuenta activada exitosamente"));
-    }   
+    }
 
+    @PutMapping("/editar-perfil")
+    public ResponseEntity<MensajeDTO<String>> editarCuenta(@Valid @RequestBody EditarCuentaDTO cuenta) throws Exception{
+        cuentaServicio.editarCuenta(cuenta);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Cuenta editada exitosamente"));
+    }
 
 }
 
