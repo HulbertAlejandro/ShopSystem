@@ -23,7 +23,7 @@ public interface CuentaServicio {
 
     TokenDTO iniciarSesion(LoginDTO loginDTO) throws Exception;
 
-    List<ItemCuentaDTO> listarCuentas() throws Exception;
+    List<InformacionCuentaDTO> listarCuentas() throws Exception;
 
     String activarCuenta(ValidarCuentaDTO validarCuentaDTO) throws Exception;
 

@@ -19,10 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Transactional
@@ -171,9 +168,9 @@ public class CuentaServicioImpl implements CuentaServicio {
     }
 
     @Override
-    public String eliminarCuenta(String email) throws Exception {
+    public String eliminarCuenta(String id) throws Exception {
 
-        Cuenta cuentaUsuario = obtenerCuenta(email);
+        Cuenta cuentaUsuario = obtenerCuentaId(id);
 
         if (cuentaUsuario.getEstadoCuenta() != EstadoCuenta.ACTIVO) {
             throw new Exception("La cuenta no está activa");
@@ -281,6 +278,9 @@ public class CuentaServicioImpl implements CuentaServicio {
             System.out.println("Credenciales del usuario encontrado: " + cuenta.getEmail());
             System.out.println("Estado de la cuenta: " + cuenta.getEstadoCuenta());
 
+            if (cuenta.getEstadoCuenta() == EstadoCuenta.ELIMINADO) {
+                throw new Exception("La cuenta no esta registrada");
+            }
             // Verifica si la cuenta está activa
             if (cuenta.getEstadoCuenta() != EstadoCuenta.ACTIVO) {
                 throw new Exception("La cuenta no está activa");
@@ -325,13 +325,27 @@ public class CuentaServicioImpl implements CuentaServicio {
         }
     }
 
-
-
-
     @Override
-    public List<ItemCuentaDTO> listarCuentas() throws Exception {
-        return List.of();
+    public List<InformacionCuentaDTO> listarCuentas() throws Exception {
+        List<Cuenta> cuentas = cuentaRepo.findAll();
+        List<InformacionCuentaDTO> cuentasDTO = new ArrayList<>();
+
+        for (Cuenta cuenta : cuentas) {
+            if (cuenta.getUsuario() != null) {
+                cuentasDTO.add(new InformacionCuentaDTO(
+                        cuenta.getUsuario().getCedula(),
+                        cuenta.getUsuario().getNombre(),
+                        cuenta.getUsuario().getTelefono(),
+                        cuenta.getUsuario().getDireccion(),
+                        cuenta.getEmail()
+                ));
+            } else {
+                System.err.println("Cuenta sin usuario: " + cuenta.getId());
+            }
+        }
+        return cuentasDTO;
     }
+
 
     private Cuenta obtenerPorEmail(String correo) throws Exception {
         Optional<Cuenta> cuentaOptional = cuentaRepo.buscarCuentaPorCorreo(correo);
@@ -494,4 +508,5 @@ public class CuentaServicioImpl implements CuentaServicio {
                 "id", cuenta.getId()
         );
     }
+
 }

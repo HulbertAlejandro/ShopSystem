@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
@@ -60,5 +62,10 @@ public class AutenticacionController {
         return ResponseEntity.ok(new MensajeDTO<>(false, "Cuenta editada exitosamente"));
     }
 
+    @GetMapping("/listar-clientes")
+    public ResponseEntity<MensajeDTO<List<InformacionCuentaDTO>>> listarCuentas() throws Exception {
+        List<InformacionCuentaDTO> cupones = cuentaServicio.listarCuentas();
+        return ResponseEntity.ok(new MensajeDTO<>(false, cupones));
+    }
 }
 
