@@ -63,8 +63,8 @@ public class AutenticacionController {
     }
 
     @GetMapping("/listar-clientes")
-    public ResponseEntity<MensajeDTO<List<InformacionCuentaDTO>>> listarCuentas() throws Exception {
-        List<InformacionCuentaDTO> cupones = cuentaServicio.listarCuentas();
+    public ResponseEntity<MensajeDTO<List<InformacionCuentaDTO>>> listarCuentasCliente() throws Exception {
+        List<InformacionCuentaDTO> cupones = cuentaServicio.listarCuentasClientes();
         return ResponseEntity.ok(new MensajeDTO<>(false, cupones));
     }
 }
