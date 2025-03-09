@@ -70,7 +70,7 @@ public class AutenticacionController {
 
     @DeleteMapping("/eliminar-cliente/{id}")
     public ResponseEntity<MensajeDTO<String>> eliminarCliente(@PathVariable String id) throws Exception{
-        cuentaServicio.eliminarCuenta(id);
+        cuentaServicio.eliminarCuentaCedula(id);
         return ResponseEntity.ok(new MensajeDTO<>(false, "Cliente eliminado exitosamente"));
     }
 }
