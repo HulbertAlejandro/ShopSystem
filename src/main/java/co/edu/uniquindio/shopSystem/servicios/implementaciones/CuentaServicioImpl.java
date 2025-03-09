@@ -184,8 +184,8 @@ public class CuentaServicioImpl implements CuentaServicio {
 
     @Override
     public String eliminarCuentaCedula(String id) throws Exception {
-
-        Cuenta cuentaUsuario = obtenerCuentaCedula(id);
+        Optional<Cuenta> cuentaOptional = cuentaRepo.buscarCuentaPorCedula(id);
+        Cuenta cuentaUsuario = obtenerCuentaCedula(cuentaOptional.get().getUsuario().getCedula());
 
         cuentaUsuario.setEstadoCuenta(EstadoCuenta.ELIMINADO);
         cuentaRepo.save(cuentaUsuario);
@@ -347,7 +347,7 @@ public class CuentaServicioImpl implements CuentaServicio {
 
     @Override
     public List<InformacionCuentaDTO> listarCuentasClientes() throws Exception {
-        List<Cuenta> cuentas = cuentaRepo.obtenerClientes();
+        List<Cuenta> cuentas = cuentaRepo.obtenerClientesActivos();
         List<InformacionCuentaDTO> cuentasDTO = new ArrayList<>();
 
         for (Cuenta cuenta : cuentas) {
