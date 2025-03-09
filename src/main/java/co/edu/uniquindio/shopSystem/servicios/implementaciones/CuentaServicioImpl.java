@@ -183,6 +183,26 @@ public class CuentaServicioImpl implements CuentaServicio {
     }
 
     @Override
+    public String eliminarCuentaCedula(String id) throws Exception {
+
+        Cuenta cuentaUsuario = obtenerCuentaCedula(id);
+
+        cuentaUsuario.setEstadoCuenta(EstadoCuenta.ELIMINADO);
+        cuentaRepo.save(cuentaUsuario);
+
+        return "Eliminado";
+    }
+
+    private Cuenta obtenerCuentaCedula(String id) throws Exception {
+        Optional<Cuenta> cuentaOptional = cuentaRepo.findById(id);
+        if (cuentaOptional.isEmpty()) {
+            throw new Exception("La cuenta con la cedula: " + id + " no existe");
+        }
+
+        return cuentaOptional.get();
+    }
+
+    @Override
     public InformacionCuentaDTO obtenerInformacionCuenta(String id) throws Exception {
         Cuenta cuentaUsuario = obtenerCuentaId(id);
         if (cuentaUsuario == null || cuentaUsuario.getEstadoCuenta() != EstadoCuenta.ACTIVO) {
