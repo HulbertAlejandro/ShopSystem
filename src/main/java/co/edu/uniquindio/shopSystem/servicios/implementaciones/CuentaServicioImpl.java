@@ -194,7 +194,7 @@ public class CuentaServicioImpl implements CuentaServicio {
     }
 
     private Cuenta obtenerCuentaCedula(String id) throws Exception {
-        Optional<Cuenta> cuentaOptional = cuentaRepo.findById(id);
+        Optional<Cuenta> cuentaOptional = cuentaRepo.buscarCuentaPorCedula(id);
         if (cuentaOptional.isEmpty()) {
             throw new Exception("La cuenta con la cedula: " + id + " no existe");
         }
