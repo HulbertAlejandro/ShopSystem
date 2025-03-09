@@ -16,9 +16,7 @@ import java.util.List;
 @RequestMapping("/api/auth")
 public class AutenticacionController {
 
-
     private final CuentaServicio cuentaServicio;
-
 
     @PostMapping("/iniciar-sesion")
     public ResponseEntity<MensajeDTO<TokenDTO>> iniciarSesion(@Valid @RequestBody LoginDTO loginDTO) throws Exception{
@@ -27,7 +25,7 @@ public class AutenticacionController {
     }
 
     @PostMapping("/crear-cuenta")
-    public ResponseEntity<MensajeDTO<String>> crearCuenta(@RequestBody @Valid   CrearCuentaDTO cuenta) throws Exception{
+    public ResponseEntity<MensajeDTO<String>> crearCuenta(@RequestBody @Valid CrearCuentaDTO cuenta) throws Exception{
         cuentaServicio.crearCuenta(cuenta);
         return ResponseEntity.ok(new MensajeDTO<>(false, "Cuenta creada exitosamente"));
     }
@@ -70,8 +68,7 @@ public class AutenticacionController {
 
     @DeleteMapping("/eliminar-cliente/{id}")
     public ResponseEntity<MensajeDTO<String>> eliminarCliente(@PathVariable String id) throws Exception{
-        cuentaServicio.eliminarCuenta(id);
+        cuentaServicio.eliminarCuentaCedula(id);
         return ResponseEntity.ok(new MensajeDTO<>(false, "Cliente eliminado exitosamente"));
     }
 }
-

@@ -184,19 +184,23 @@ public class CuentaServicioImpl implements CuentaServicio {
 
     @Override
     public String eliminarCuentaCedula(String id) throws Exception {
+        Optional<Cuenta> cuentaOptional = cuentaRepo.buscarCuentaPorCedula(id);
 
-        Cuenta cuentaUsuario = obtenerCuentaCedula(id);
-
-        cuentaUsuario.setEstadoCuenta(EstadoCuenta.ELIMINADO);
-        cuentaRepo.save(cuentaUsuario);
-
-        return "Eliminado";
+        if (cuentaOptional.isPresent()) {
+            Cuenta cuentaUsuario = cuentaOptional.get();
+            cuentaUsuario.setEstadoCuenta(EstadoCuenta.ELIMINADO);
+            cuentaRepo.save(cuentaUsuario);
+            return "Eliminado";
+        } else {
+            throw new Exception("Cuenta no encontrada con la cédula: " + id);
+        }
     }
 
     private Cuenta obtenerCuentaCedula(String id) throws Exception {
-        Optional<Cuenta> cuentaOptional = cuentaRepo.findById(id);
+        Optional<Cuenta> cuentaOptional = cuentaRepo.buscarCuentaPorCedula(id);
+
         if (cuentaOptional.isEmpty()) {
-            throw new Exception("La cuenta con la cedula: " + id + " no existe");
+            throw new Exception("La cuenta con la cédula: " + id + " no existe");
         }
 
         return cuentaOptional.get();
@@ -347,7 +351,7 @@ public class CuentaServicioImpl implements CuentaServicio {
 
     @Override
     public List<InformacionCuentaDTO> listarCuentasClientes() throws Exception {
-        List<Cuenta> cuentas = cuentaRepo.obtenerClientes();
+        List<Cuenta> cuentas = cuentaRepo.obtenerClientesActivos();
         List<InformacionCuentaDTO> cuentasDTO = new ArrayList<>();
 
         for (Cuenta cuenta : cuentas) {
