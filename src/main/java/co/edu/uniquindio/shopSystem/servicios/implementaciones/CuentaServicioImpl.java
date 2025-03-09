@@ -326,8 +326,8 @@ public class CuentaServicioImpl implements CuentaServicio {
     }
 
     @Override
-    public List<InformacionCuentaDTO> listarCuentas() throws Exception {
-        List<Cuenta> cuentas = cuentaRepo.findAll();
+    public List<InformacionCuentaDTO> listarCuentasClientes() throws Exception {
+        List<Cuenta> cuentas = cuentaRepo.obtenerClientes();
         List<InformacionCuentaDTO> cuentasDTO = new ArrayList<>();
 
         for (Cuenta cuenta : cuentas) {
