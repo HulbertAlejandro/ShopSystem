@@ -13,6 +13,9 @@ public interface CuentaServicio {
 
     String eliminarCuenta(String id) throws Exception;
 
+    String eliminarCuentaCedula(String id) throws Exception;
+
+
     InformacionCuentaDTO obtenerInformacionCuenta(String id) throws Exception;
 
     TokenDTO refreshToken(TokenDTO tokenDTO) throws Exception;
