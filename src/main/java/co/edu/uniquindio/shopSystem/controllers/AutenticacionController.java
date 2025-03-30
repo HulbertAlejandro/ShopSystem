@@ -1,6 +1,7 @@
 package co.edu.uniquindio.shopSystem.controllers;
 
 import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
+import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.MensajeDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.CuentaServicio;
@@ -73,5 +74,12 @@ public class AutenticacionController {
         cuentaServicio.eliminarCuentaCedula(id);
         return ResponseEntity.ok(new MensajeDTO<>(false, "Cliente eliminado exitosamente"));
     }
+
+    @PostMapping("/crear-producto")
+    public ResponseEntity<MensajeDTO<String>> crearProducto(@RequestBody @Valid CrearProductoDTO producto) throws Exception{
+        cuentaServicio.crearProducto(producto);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Producto creado exitosamente"));
+    }
+
 }
 

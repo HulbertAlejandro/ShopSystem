@@ -3,13 +3,16 @@ package co.edu.uniquindio.shopSystem.servicios.implementaciones;
 import co.edu.uniquindio.shopSystem.config.JWTUtils;
 import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.EmailDTOs.EmailDTO;
+import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Cuenta;
+import co.edu.uniquindio.shopSystem.modelo.documentos.Producto;
 import co.edu.uniquindio.shopSystem.modelo.enums.EstadoCuenta;
 import co.edu.uniquindio.shopSystem.modelo.enums.Rol;
 import co.edu.uniquindio.shopSystem.modelo.vo.CodigoValidacion;
 import co.edu.uniquindio.shopSystem.modelo.vo.Usuario;
 import co.edu.uniquindio.shopSystem.repositorios.CuentaRepo;
+import co.edu.uniquindio.shopSystem.repositorios.ProductoRepo;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.CuentaServicio;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.EmailServicio;
 
@@ -28,14 +31,16 @@ public class CuentaServicioImpl implements CuentaServicio {
     private final EmailServicio emailServicio;
     private JWTUtils jwtUtils;
     private final CuentaRepo cuentaRepo;
+    private final ProductoRepo productoRepo;
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    public CuentaServicioImpl(CuentaRepo cuentaRepo, EmailServicio emailServicio, BCryptPasswordEncoder passwordEncoder, JWTUtils jwtUtils) {
+    public CuentaServicioImpl(CuentaRepo cuentaRepo, EmailServicio emailServicio, BCryptPasswordEncoder passwordEncoder, JWTUtils jwtUtils, ProductoRepo productoRepo) {
         this.cuentaRepo = cuentaRepo;
         this.emailServicio = emailServicio;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
+        this.productoRepo = productoRepo;
     }
 
     @Override
@@ -479,6 +484,34 @@ public class CuentaServicioImpl implements CuentaServicio {
         Map<String, Object> map = construirClaims(cuenta_usuario);
         return new TokenDTO(jwtUtils.generarToken(cuenta_usuario.getEmail(), map));
     }
+
+    @Override
+    public void crearProducto(CrearProductoDTO producto) throws Exception {
+
+        if (existeProducto(producto.referencia())) {
+            throw new Exception("Ya existe un producto con esta referencia");
+        }
+
+        if (producto.precio() <= 0) {
+            throw new Exception("El precio no puede ser negativo");
+        }
+
+        Producto producto_nuevo = new Producto();
+        producto_nuevo.setCodigo(producto.referencia());
+        producto_nuevo.setReferencia(producto.referencia());
+        producto_nuevo.setNombre(producto.nombre());
+        producto_nuevo.setTipoProducto(producto.tipoProducto());
+        producto_nuevo.setPrecio(producto.precio());
+        producto_nuevo.setUrlImagen(producto.imageUrl());
+        producto_nuevo.setUnidades(producto.unidades());
+
+        productoRepo.save(producto_nuevo);
+    }
+
+    private boolean existeProducto(String codigo) {
+        return productoRepo.existsById(codigo);
+    }
+
 
     public Cuenta obtenerCuentaId(String id) throws Exception {
         Optional<Cuenta> cuentaOptional = cuentaRepo.findById(id);

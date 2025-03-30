@@ -12,6 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+
 public class Producto {
 
     @Id
@@ -21,6 +22,7 @@ public class Producto {
     private String referencia;
     private String nombre;
     private TipoProducto tipoProducto;
+    private String urlImagen;
     private int unidades;
     private float precio;
 }
