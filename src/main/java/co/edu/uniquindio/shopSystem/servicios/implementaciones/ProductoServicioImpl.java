@@ -69,8 +69,10 @@ public class ProductoServicioImpl implements ProductoServicio {
                         producto.getReferencia(),
                         producto.getNombre(),
                         producto.getTipoProducto(),
+                        producto.getUrlImagen(),
                         producto.getUnidades(),
-                        producto.getPrecio()
+                        producto.getPrecio(),
+                        producto.getDescripcion()
                 )
         ).collect(Collectors.toList());
     }

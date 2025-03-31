@@ -7,6 +7,8 @@ public record ObtenerProductoDTO(
         String referencia,
         String nombre,
         TipoProducto tipoProducto,
+        String imageUrl,
         int unidades,
-        float precio
+        float precio,
+        String descripcion
 ) {}

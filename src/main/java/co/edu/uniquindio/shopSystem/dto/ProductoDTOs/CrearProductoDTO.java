@@ -8,5 +8,6 @@ public record CrearProductoDTO(
         TipoProducto tipoProducto,
         String imageUrl,
         int unidades,
-        float precio
+        float precio,
+        String descripcion
 ) {}

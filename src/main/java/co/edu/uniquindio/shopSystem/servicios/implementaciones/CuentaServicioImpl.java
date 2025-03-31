@@ -497,13 +497,13 @@ public class CuentaServicioImpl implements CuentaServicio {
         }
 
         Producto producto_nuevo = new Producto();
-        producto_nuevo.setCodigo(producto.referencia());
         producto_nuevo.setReferencia(producto.referencia());
         producto_nuevo.setNombre(producto.nombre());
         producto_nuevo.setTipoProducto(producto.tipoProducto());
         producto_nuevo.setPrecio(producto.precio());
         producto_nuevo.setUrlImagen(producto.imageUrl());
         producto_nuevo.setUnidades(producto.unidades());
+        producto_nuevo.setDescripcion(producto.descripcion());
 
         productoRepo.save(producto_nuevo);
     }

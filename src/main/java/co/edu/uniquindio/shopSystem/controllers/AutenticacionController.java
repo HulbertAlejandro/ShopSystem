@@ -2,9 +2,12 @@ package co.edu.uniquindio.shopSystem.controllers;
 
 import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
+import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.ObtenerProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.MensajeDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
+import co.edu.uniquindio.shopSystem.repositorios.ProductoRepo;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.CuentaServicio;
+import co.edu.uniquindio.shopSystem.servicios.interfaces.ProductoServicio;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +22,8 @@ public class AutenticacionController {
 
 
     private final CuentaServicio cuentaServicio;
+    private final ProductoRepo productoRepo;
+    private final ProductoServicio productoServicio;
 
 
     @PostMapping("/iniciar-sesion")
@@ -79,6 +84,12 @@ public class AutenticacionController {
     public ResponseEntity<MensajeDTO<String>> crearProducto(@RequestBody @Valid CrearProductoDTO producto) throws Exception{
         cuentaServicio.crearProducto(producto);
         return ResponseEntity.ok(new MensajeDTO<>(false, "Producto creado exitosamente"));
+    }
+
+    @GetMapping("/listar-productos")
+    public ResponseEntity<MensajeDTO<List<ObtenerProductoDTO>>> listarProductos() throws Exception {
+        List<ObtenerProductoDTO> productos = productoServicio.listarProductos();
+        return ResponseEntity.ok(new MensajeDTO<>(false, productos));
     }
 
 }
