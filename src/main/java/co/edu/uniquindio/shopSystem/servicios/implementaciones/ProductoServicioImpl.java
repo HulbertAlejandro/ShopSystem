@@ -2,6 +2,7 @@ package co.edu.uniquindio.shopSystem.servicios.implementaciones;
 
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.EditarProductoDTO;
+import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.InformacionProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.ObtenerProductoDTO;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Producto;
 import co.edu.uniquindio.shopSystem.repositorios.ProductoRepo;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -76,4 +78,25 @@ public class ProductoServicioImpl implements ProductoServicio {
                 )
         ).collect(Collectors.toList());
     }
+
+    @Override
+    public InformacionProductoDTO obtenerInformacionProducto(String id) throws Exception{
+        Optional<Producto> producto = productoRepo.buscarPorReferencia(id);
+        Producto producto_base = producto.get();
+        if (producto.isEmpty()) {
+            throw new Exception("El producto no está existe.");
+        }
+
+        return new InformacionProductoDTO(
+                producto_base.getReferencia(),
+                producto_base.getNombre(),
+                producto_base.getTipoProducto(),
+                producto_base.getUrlImagen(),
+                producto_base.getUnidades(),
+                producto_base.getPrecio(),
+                producto_base.getDescripcion()
+        );
+    }
+
+
 }

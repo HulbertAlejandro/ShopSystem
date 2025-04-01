@@ -1,15 +1,23 @@
 package co.edu.uniquindio.shopSystem.controllers;
 
+import co.edu.uniquindio.shopSystem.dto.CarritoDTOs.InformacionCarritoDTO;
+import co.edu.uniquindio.shopSystem.dto.CarritoDTOs.ItemsCarritoDTO;
+import co.edu.uniquindio.shopSystem.dto.CarritoDTOs.ProductoCarritoDTO;
+import co.edu.uniquindio.shopSystem.dto.CarritoDTOs.VistaCarritoDTO;
 import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
+import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.InformacionProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.ObtenerProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.MensajeDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
 import co.edu.uniquindio.shopSystem.repositorios.ProductoRepo;
+import co.edu.uniquindio.shopSystem.servicios.interfaces.CarritoServicio;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.CuentaServicio;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.ProductoServicio;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +32,7 @@ public class AutenticacionController {
     private final CuentaServicio cuentaServicio;
     private final ProductoRepo productoRepo;
     private final ProductoServicio productoServicio;
+    private final CarritoServicio carritoServicio;
 
 
     @PostMapping("/iniciar-sesion")
@@ -90,6 +99,31 @@ public class AutenticacionController {
     public ResponseEntity<MensajeDTO<List<ObtenerProductoDTO>>> listarProductos() throws Exception {
         List<ObtenerProductoDTO> productos = productoServicio.listarProductos();
         return ResponseEntity.ok(new MensajeDTO<>(false, productos));
+    }
+
+    @PostMapping("/carrito/agregar-item")
+    public ResponseEntity<MensajeDTO<String>> agregarItemCarrito(@Valid @RequestBody ProductoCarritoDTO productoCarritoDTO) throws Exception {
+        String respuesta = carritoServicio.agregarItemCarrito(productoCarritoDTO);
+        return ResponseEntity.ok(new MensajeDTO<>(false, respuesta));
+    }
+
+    @GetMapping("/producto/informacion/{id}")
+    public ResponseEntity<InformacionProductoDTO> obtenerInformacionProducto(@PathVariable String id) throws Exception {
+        InformacionProductoDTO eventos = productoServicio.obtenerInformacionProducto(id);
+        return new ResponseEntity<>(eventos, HttpStatus.OK);
+    }
+
+    @GetMapping("/carrito/obtener-informacion/{id}")
+    public ResponseEntity<MensajeDTO<VistaCarritoDTO>> obtenerInformacionCarrito(@PathVariable String id) throws Exception {
+        String idCarrito = carritoServicio.obtenerIdCarrito(id);
+        VistaCarritoDTO carritoDTO = carritoServicio.obtenerInformacionCarrito(idCarrito);
+        return ResponseEntity.ok(new MensajeDTO<>(false, carritoDTO));
+    }
+
+    @GetMapping("/carrito/cliente/{id}")
+    public ResponseEntity<VistaCarritoDTO> obtenerCarritoCliente(@PathVariable String id) throws Exception {
+        VistaCarritoDTO productos = carritoServicio.obtenerInformacionCarrito(id);
+        return new ResponseEntity<>(productos, HttpStatus.OK);
     }
 
 }

@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record VistaCarritoDTO(
-
         String id_carrito,
         List<DetalleCarrito> detallesCarrito,
         LocalDateTime fecha

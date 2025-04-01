@@ -14,17 +14,17 @@ public interface CarritoServicio {
 
     void eliminarCarrito(EliminarCarritoDTO eliminarCarritoDTO) throws Exception;
 
-    VistaCarritoDTO obtenerInformacionCarrito(ObjectId id) throws Exception;
+    VistaCarritoDTO obtenerInformacionCarrito(String id) throws Exception;
 
     String actualizarItemCarrito(ActualizarItemCarritoDTO actualizarItemCarritoDTO) throws Exception;
 
-    double calcularTotalCarrito(ObjectId idCliente) throws Exception;
+    double calcularTotalCarrito(String idCliente) throws Exception;
 
-    String vaciarCarrito(ObjectId id) throws Exception;
+    String vaciarCarrito(String id) throws Exception;
 
     List<CarritoListDTO> listarCarritos() throws Exception;
 
-
+    String obtenerIdCarrito(String id) throws Exception;
 
 
 }

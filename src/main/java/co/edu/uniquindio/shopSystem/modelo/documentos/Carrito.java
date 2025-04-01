@@ -25,5 +25,5 @@ public class Carrito {
     private String id;
     private List<DetalleCarrito> items;
     private LocalDateTime fecha;
-    private ObjectId idUsuario;
+    private String idUsuario;
 }

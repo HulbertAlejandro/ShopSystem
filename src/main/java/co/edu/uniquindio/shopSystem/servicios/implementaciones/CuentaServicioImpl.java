@@ -5,17 +5,20 @@ import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.EmailDTOs.EmailDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
+import co.edu.uniquindio.shopSystem.modelo.documentos.Carrito;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Cuenta;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Producto;
 import co.edu.uniquindio.shopSystem.modelo.enums.EstadoCuenta;
 import co.edu.uniquindio.shopSystem.modelo.enums.Rol;
 import co.edu.uniquindio.shopSystem.modelo.vo.CodigoValidacion;
 import co.edu.uniquindio.shopSystem.modelo.vo.Usuario;
+import co.edu.uniquindio.shopSystem.repositorios.CarritoRepo;
 import co.edu.uniquindio.shopSystem.repositorios.CuentaRepo;
 import co.edu.uniquindio.shopSystem.repositorios.ProductoRepo;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.CuentaServicio;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.EmailServicio;
 
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,18 +32,20 @@ import java.util.*;
 public class CuentaServicioImpl implements CuentaServicio {
 
     private final EmailServicio emailServicio;
+    private final CarritoRepo carritoRepo;
     private JWTUtils jwtUtils;
     private final CuentaRepo cuentaRepo;
     private final ProductoRepo productoRepo;
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    public CuentaServicioImpl(CuentaRepo cuentaRepo, EmailServicio emailServicio, BCryptPasswordEncoder passwordEncoder, JWTUtils jwtUtils, ProductoRepo productoRepo) {
+    public CuentaServicioImpl(CuentaRepo cuentaRepo, EmailServicio emailServicio, BCryptPasswordEncoder passwordEncoder, JWTUtils jwtUtils, ProductoRepo productoRepo, CarritoRepo carritoRepo) {
         this.cuentaRepo = cuentaRepo;
         this.emailServicio = emailServicio;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
         this.productoRepo = productoRepo;
+        this.carritoRepo = carritoRepo;
     }
 
     @Override
@@ -118,9 +123,13 @@ public class CuentaServicioImpl implements CuentaServicio {
 
         cuentaRepo.save(nuevaCuenta);
 
-        // NESTOR CASTELBLANCO 2/03/25
-        // COMENTE LA LINEAS DE ABAJO YA QUE SE ROMPÍA EL BACKEND AL ENVIAR EL CORREO
+        Carrito carrito = Carrito.builder()
+                .idUsuario(nuevaCuenta.getUsuario().getCedula())
+                .fecha(LocalDateTime.now())
+                .items(new ArrayList<>())
+                .build();
 
+        carritoRepo.save(carrito);
 
         // Enviar correo de activación solo si no es administrador
         if (!"admin@gmail.com".equals(cuenta.correo())) {
