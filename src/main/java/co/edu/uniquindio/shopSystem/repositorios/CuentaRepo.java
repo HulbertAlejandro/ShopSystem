@@ -27,4 +27,5 @@ public interface CuentaRepo extends MongoRepository<Cuenta, String> {
     @Query(value = "{ 'rol' : 'CLIENTE' }")
     List<Cuenta> obtenerClientes();
 
+    ObjectId id(String id);
 }

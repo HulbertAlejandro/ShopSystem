@@ -54,6 +54,19 @@ public class CarritoServicioImpl implements CarritoServicio {
         Producto productoSeleccionado = productoRepo.buscarPorReferencia(productoCarritoDTO.id())
                 .orElseThrow(() -> new Exception("Producto no encontrado con referencia: " + productoCarritoDTO.id()));
 
+
+        List<DetalleCarrito> lista = carrito.getItems();
+
+        List<Producto> productosSistema = productoRepo.findAll();
+
+        for (DetalleCarrito detalleCarrito : lista) {
+            Optional<Producto> productoOpt = productoRepo.buscarPorReferencia(detalleCarrito.getIdProducto());
+            Producto producto = productoOpt.get();
+            if (producto.getReferencia().equals(productoCarritoDTO.id())) {
+                throw new Exception("El producto seleccionado ya se encuentra en el carrito");
+            }
+        }
+
         // 4. Validar unidades
         if (productoCarritoDTO.unidades() <= 0) {
             throw new IllegalArgumentException("Las unidades deben ser mayores a cero");
@@ -76,8 +89,13 @@ public class CarritoServicioImpl implements CarritoServicio {
     }
 
     @Override
-    public String eliminarItemCarrito(String idDetalle, String idCarrito) throws Exception {
-        Optional<Carrito> carritoCliente = carritoRepo.findById(idCarrito);
+    public String eliminarItemCarrito(String idDetalle, String idCliente) throws Exception {
+
+        Optional<Cuenta> cuentaOptional = cuentaRepo.findById(idCliente);
+        Cuenta cuenta = cuentaOptional.get();
+
+        Optional<Carrito> carritoCliente = carritoRepo.buscarCarritoPorIdCliente(cuenta.getUsuario().getCedula());
+
         if (carritoCliente.isEmpty()) {
             throw new Exception("El carrito no existe");
         }
@@ -90,12 +108,12 @@ public class CarritoServicioImpl implements CarritoServicio {
 
         // Obtener los productos que están en el carrito
         for (DetalleCarrito detalleCarrito : lista) {
-            Optional<Producto> productoOpt = productoRepo.buscarPorCodigo(detalleCarrito.getIdProducto());
+            Optional<Producto> productoOpt = productoRepo.buscarPorReferencia(detalleCarrito.getIdProducto());
             if (productoOpt.isPresent()) {
                 productosCarrito.add(productoOpt.get());
             } else {
                 // En caso de que no se encuentre el evento
-                throw new Exception("Evento no encontrado en el carrito");
+                throw new Exception("Producto no encontrado en el carrito");
             }
         }
 
@@ -103,7 +121,7 @@ public class CarritoServicioImpl implements CarritoServicio {
         boolean removed = lista.removeIf(i -> i.getIdDetalleCarrito().equals(idDetalle));
 
         if (!removed) {
-            throw new Exception("El elemento no se encontró en el carrito");
+            throw new Exception("El producto no se encontró en el carrito");
         }
 
         // Guardar los cambios en los eventos y el carrito
@@ -112,7 +130,7 @@ public class CarritoServicioImpl implements CarritoServicio {
         }
         carritoRepo.save(carrito);
 
-        return "Elemento eliminado del carrito";
+        return "Producto eliminado del carrito";
     }
 
 

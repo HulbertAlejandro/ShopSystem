@@ -129,5 +129,14 @@ public class AutenticacionController {
         return ResponseEntity.ok(new MensajeDTO<>(false, respuesta));
     }
 
+    @DeleteMapping("/eliminar-producto")
+    public ResponseEntity<MensajeDTO<String>> eliminarProducto(
+            @RequestParam String idProducto,
+            @RequestParam String idCliente) throws Exception {
+
+        carritoServicio.eliminarItemCarrito(idProducto, idCliente);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Producto eliminado exitosamente"));
+    }
+
 }
 
