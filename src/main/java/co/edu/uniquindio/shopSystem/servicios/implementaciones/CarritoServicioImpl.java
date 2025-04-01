@@ -1,5 +1,6 @@
 package co.edu.uniquindio.shopSystem.servicios.implementaciones;
 
+import ch.qos.logback.core.net.server.Client;
 import co.edu.uniquindio.shopSystem.dto.CarritoDTOs.*;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Carrito;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Cuenta;
@@ -13,6 +14,7 @@ import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.text.html.Option;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -186,27 +188,56 @@ public class CarritoServicioImpl implements CarritoServicio {
 
     @Override
     public String actualizarItemCarrito(ActualizarItemCarritoDTO actualizarItemCarritoDTO) throws Exception {
+        int nuevaCantidad = actualizarItemCarritoDTO.nuevaCantidad();
+
+        // Buscar la cuenta del cliente
+        Optional<Cuenta> cuentaOptional = cuentaRepo.findById(actualizarItemCarritoDTO.idCliente());
+        if (cuentaOptional.isEmpty()) {
+            throw new Exception("La cuenta del cliente no existe");
+        }
+        Cuenta cuenta = cuentaOptional.get();
+
         // Buscar el carrito del cliente
-        Carrito carrito = carritoRepo.buscarCarritoPorIdCliente(actualizarItemCarritoDTO.idCliente())
-                .orElseThrow(() -> new Exception("El carrito no existe"));
+        Optional<Carrito> carritoCliente = carritoRepo.buscarCarritoPorIdCliente(cuenta.getUsuario().getCedula());
+        if (carritoCliente.isEmpty()) {
+            throw new Exception("El carrito no existe");
+        }
+        Carrito carrito = carritoCliente.get();
 
         // Buscar el item en el carrito
         for (DetalleCarrito item : carrito.getItems()) {
             if (item.getIdProducto().equals(actualizarItemCarritoDTO.idProducto())) {
 
                 // Buscar el producto correspondiente
-                Producto producto = productoRepo.buscarPorCodigo(item.getIdProducto())
-                        .orElseThrow(() -> new Exception("El producto no existe"));
+                Optional<Producto> productoOptional = productoRepo.buscarPorReferencia(item.getIdProducto());
+                if (productoOptional.isEmpty()) {
+                    throw new Exception("El producto no existe");
+                }
+                Producto producto = productoOptional.get();
 
-                // Aquí puedes realizar la actualización del item con la nueva información
-                // Ejemplo: item.setCantidad(actualizarItemCarritoDTO.nuevaCantidad());
+                // Calcular la diferencia de unidades (si se agregan o se quitan)
+                int diferenciaUnidades = nuevaCantidad - item.getCantidad();
 
-                return "Item actualizado correctamente";
+                // Modificar las unidades disponibles en función de la nueva cantidad
+                if (producto.getUnidades() - diferenciaUnidades < 0) {
+                    throw new Exception("No hay suficiente stock disponible para este producto.");
+                }
+                producto.setUnidades(producto.getUnidades() - diferenciaUnidades);
+
+                // Actualizar la cantidad en el carrito
+                item.setCantidad(nuevaCantidad);
+
+                // Guardar los cambios en el producto y en el carrito
+                productoRepo.save(producto);
+                carritoRepo.save(carrito);  // Se guarda el carrito, no un solo item
+
+                return "Cantidad de producto en el carrito actualizada exitosamente";
             }
         }
 
         throw new Exception("El item no existe en el carrito");
     }
+
 
     @Override
     public double calcularTotalCarrito(String idCliente) throws Exception {

@@ -1,9 +1,6 @@
 package co.edu.uniquindio.shopSystem.controllers;
 
-import co.edu.uniquindio.shopSystem.dto.CarritoDTOs.InformacionCarritoDTO;
-import co.edu.uniquindio.shopSystem.dto.CarritoDTOs.ItemsCarritoDTO;
-import co.edu.uniquindio.shopSystem.dto.CarritoDTOs.ProductoCarritoDTO;
-import co.edu.uniquindio.shopSystem.dto.CarritoDTOs.VistaCarritoDTO;
+import co.edu.uniquindio.shopSystem.dto.CarritoDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.InformacionProductoDTO;
@@ -124,6 +121,12 @@ public class AutenticacionController {
     public ResponseEntity<VistaCarritoDTO> obtenerCarritoCliente(@PathVariable String id) throws Exception {
         VistaCarritoDTO productos = carritoServicio.obtenerInformacionCarrito(id);
         return new ResponseEntity<>(productos, HttpStatus.OK);
+    }
+
+    @PutMapping("/carrito/actualizar-item")
+    public ResponseEntity<MensajeDTO<String>> actualizarItemCarrito(@Valid @RequestBody ActualizarItemCarritoDTO actualizarItemCarritoDTO) throws Exception {
+        String respuesta = carritoServicio.actualizarItemCarrito(actualizarItemCarritoDTO);
+        return ResponseEntity.ok(new MensajeDTO<>(false, respuesta));
     }
 
 }
