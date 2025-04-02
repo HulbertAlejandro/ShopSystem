@@ -37,29 +37,25 @@ public class CarritoServicioImpl implements CarritoServicio {
 
     @Override
     public String agregarItemCarrito(ProductoCarritoDTO productoCarritoDTO) throws Exception {
-        // Validación de entrada
+        // Validación de entrada: el DTO no debe ser nulo
         if (productoCarritoDTO == null) {
             throw new IllegalArgumentException("El DTO del producto no puede ser nulo");
         }
 
-        // 1. Buscar la cuenta del usuario
+        // 1. Buscar la cuenta del usuario en la base de datos
         Cuenta cuenta = cuentaRepo.findById(productoCarritoDTO.idUsuario())
                 .orElseThrow(() -> new Exception("No se encontró la cuenta con ID: " + productoCarritoDTO.idUsuario()));
 
-        // 2. Buscar el carrito del cliente
+        // 2. Obtener el carrito del usuario
         Carrito carrito = carritoRepo.buscarCarritoPorIdCliente(cuenta.getUsuario().getCedula())
                 .orElseThrow(() -> new Exception("El carrito no existe para el cliente con ID: " + productoCarritoDTO.idUsuario()));
 
-        // 3. Verificar existencia del producto
+        // 3. Verificar si el producto existe en la base de datos
         Producto productoSeleccionado = productoRepo.buscarPorReferencia(productoCarritoDTO.id())
                 .orElseThrow(() -> new Exception("Producto no encontrado con referencia: " + productoCarritoDTO.id()));
 
-
-        List<DetalleCarrito> lista = carrito.getItems();
-
-        List<Producto> productosSistema = productoRepo.findAll();
-
-        for (DetalleCarrito detalleCarrito : lista) {
+        // Validar que el producto no esté duplicado en el carrito
+        for (DetalleCarrito detalleCarrito : carrito.getItems()) {
             Optional<Producto> productoOpt = productoRepo.buscarPorReferencia(detalleCarrito.getIdProducto());
             Producto producto = productoOpt.get();
             if (producto.getReferencia().equals(productoCarritoDTO.id())) {
@@ -67,21 +63,21 @@ public class CarritoServicioImpl implements CarritoServicio {
             }
         }
 
-        // 4. Validar unidades
+        // 4. Validar que el número de unidades sea mayor a cero
         if (productoCarritoDTO.unidades() <= 0) {
             throw new IllegalArgumentException("Las unidades deben ser mayores a cero");
         }
 
-        // 5. Crear detalle del carrito
+        // 5. Crear un nuevo detalle de carrito con la información del producto
         DetalleCarrito detalleCarrito = DetalleCarrito.builder()
                 .idDetalleCarrito(String.valueOf(new ObjectId()))
                 .cantidad(productoCarritoDTO.unidades())
                 .nombreProducto(productoCarritoDTO.nombreProducto())
                 .idProducto(productoCarritoDTO.id())
-                .precioUnitario(productoCarritoDTO.precio()) // Agregar precio para consistencia
+                .precioUnitario(productoCarritoDTO.precio())
                 .build();
 
-        // 6. Agregar item y guardar
+        // 6. Agregar el nuevo ítem al carrito y guardarlo en la base de datos
         carrito.getItems().add(detalleCarrito);
         carritoRepo.save(carrito);
 
@@ -90,12 +86,11 @@ public class CarritoServicioImpl implements CarritoServicio {
 
     @Override
     public String eliminarItemCarrito(String idDetalle, String idCliente) throws Exception {
+        // 1. Buscar la cuenta del usuario
+        Cuenta cuenta = cuentaRepo.findById(idCliente).get();
 
-        Optional<Cuenta> cuentaOptional = cuentaRepo.findById(idCliente);
-        Cuenta cuenta = cuentaOptional.get();
-
+        // 2. Obtener el carrito del cliente
         Optional<Carrito> carritoCliente = carritoRepo.buscarCarritoPorIdCliente(cuenta.getUsuario().getCedula());
-
         if (carritoCliente.isEmpty()) {
             throw new Exception("El carrito no existe");
         }
@@ -103,105 +98,79 @@ public class CarritoServicioImpl implements CarritoServicio {
         Carrito carrito = carritoCliente.get();
         List<DetalleCarrito> lista = carrito.getItems();
 
-        List<Producto> productosSistema = productoRepo.findAll();
-        List<Producto> productosCarrito = new ArrayList<>();
-
-        // Obtener los productos que están en el carrito
-        for (DetalleCarrito detalleCarrito : lista) {
-            Optional<Producto> productoOpt = productoRepo.buscarPorReferencia(detalleCarrito.getIdProducto());
-            if (productoOpt.isPresent()) {
-                productosCarrito.add(productoOpt.get());
-            } else {
-                // En caso de que no se encuentre el evento
-                throw new Exception("Producto no encontrado en el carrito");
-            }
-        }
-
-        // Eliminar el ítem del carrito
+        // 3. Eliminar el ítem del carrito por su ID
         boolean removed = lista.removeIf(i -> i.getIdDetalleCarrito().equals(idDetalle));
-
         if (!removed) {
             throw new Exception("El producto no se encontró en el carrito");
         }
 
-        // Guardar los cambios en los eventos y el carrito
-        for (Producto producto : productosSistema) {
-            productoRepo.save(producto);
-        }
+        // 4. Guardar los cambios en la base de datos
         carritoRepo.save(carrito);
-
         return "Producto eliminado del carrito";
     }
 
-
     @Override
     public void eliminarCarrito(EliminarCarritoDTO eliminarCarritoDTO) throws Exception {
-        // Buscar carrito por id
+        // 1. Buscar el carrito por su ID
         Optional<Carrito> carritoOptional = carritoRepo.buscarCarritoPorId(eliminarCarritoDTO.idCarrito());
         if (carritoOptional.isEmpty()) {
             throw new Exception("El carrito no existe");
         }
 
-        Carrito carrito = carritoOptional.get();
-        List<DetalleCarrito> lista = carrito.getItems();
+        // 2. Eliminar el carrito de la base de datos
+        carritoRepo.delete(carritoOptional.get());
 
-        // Iterar sobre los detalles del carrito
-        for (DetalleCarrito detalleCarrito : lista) {
-            Optional<Producto> productoOptional = productoRepo.buscarPorCodigo(detalleCarrito.getIdProducto());
-            if (productoOptional.isEmpty()) {
-                throw new Exception("El evento no existe");
-            }
-
-            Producto producto = productoOptional.get();
-
-            // Guardar el evento con las localidades actualizadas
-            productoRepo.save(producto);
-        }
-
-        // Finalmente, eliminar el carrito
-        carritoRepo.delete(carrito);
-
-        Carrito nuevoCarritoCLiente = Carrito.builder()
+        // 3. Crear un nuevo carrito vacío para el cliente
+        Carrito nuevoCarritoCliente = Carrito.builder()
                 .items(new ArrayList<>())
                 .fecha(LocalDateTime.now())
-                .idUsuario(carrito.getIdUsuario()).build();
+                .idUsuario(carritoOptional.get().getIdUsuario())
+                .build();
 
-        carritoRepo.save(nuevoCarritoCLiente);
+        carritoRepo.save(nuevoCarritoCliente);
     }
 
     @Override
     public VistaCarritoDTO obtenerInformacionCarrito(String id_carrito) throws Exception {
+        // 1. Buscar el carrito por su ID
         Optional<Carrito> carritoOptional = carritoRepo.buscarCarritoPorId(id_carrito);
         if (carritoOptional.isEmpty()) {
             throw new Exception("El carrito no existe");
         }
 
+        // 2. Obtener los detalles del carrito
         Carrito carrito = carritoOptional.get();
         List<DetalleCarrito> detallesCarrito = carrito.getItems();
         LocalDateTime fecha = carrito.getFecha();
 
+        // 3. Retornar la información en un DTO
         return new VistaCarritoDTO(carrito.getId(), detallesCarrito, fecha);
     }
 
     @Override
     public List<CarritoListDTO> listarCarritos() {
-        List<Carrito> carritos = carritoRepo.findAll();  // Obtener todos los carritos
-        return carritos.stream().map(carrito -> {
-            // Mapear cada Carrito a CarritoListDTO
-            return new CarritoListDTO(new ObjectId(carrito.getId()), carrito.getFecha(), carrito.getItems());
-        }).collect(Collectors.toList());
+        // 1. Obtener todos los carritos de la base de datos
+        List<Carrito> carritos = carritoRepo.findAll();
+
+        // 2. Convertir cada carrito en un DTO y retornarlos
+        return carritos.stream().map(carrito ->
+                new CarritoListDTO(new ObjectId(carrito.getId()), carrito.getFecha(), carrito.getItems())
+        ).collect(Collectors.toList());
     }
 
     @Override
     public String obtenerIdCarrito(String id) throws Exception {
-        Optional<Cuenta> cuentaOptional = cuentaRepo.findById(id);
-        Cuenta cuenta = cuentaOptional.get();
+        // 1. Buscar la cuenta del usuario
+        Cuenta cuenta = cuentaRepo.findById(id).get();
+
+        // 2. Obtener el carrito del usuario
         Optional<Carrito> carritoOptional = carritoRepo.buscarCarritoPorIdCliente(cuenta.getUsuario().getCedula());
         if (carritoOptional.isEmpty()) {
             throw new Exception("El carrito no existe");
         }
-        Carrito carrito = carritoOptional.get();
-        return carrito.getId();
+
+        // 3. Retornar el ID del carrito
+        return carritoOptional.get().getId();
     }
 
     @Override
@@ -256,7 +225,6 @@ public class CarritoServicioImpl implements CarritoServicio {
         throw new Exception("El item no existe en el carrito");
     }
 
-
     @Override
     public double calcularTotalCarrito(String idCliente) throws Exception {
         Carrito carrito = obtenerCarritoCliente(idCliente);
@@ -279,7 +247,6 @@ public class CarritoServicioImpl implements CarritoServicio {
         System.out.println("NOMBRE DEL PRODUCTO: " + producto.get().getNombre());
         return producto.get().getPrecio();
     }
-
 
     private Carrito obtenerCarritoCliente(String idCliente) throws Exception {
         Optional<Carrito> carritoOptional = carritoRepo.buscarCarritoPorIdCliente(idCliente);
@@ -307,4 +274,5 @@ public class CarritoServicioImpl implements CarritoServicio {
         carritoRepo.save(carrito);
         return "Carrito vaciado exitosamente";
     }
+
 }
