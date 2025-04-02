@@ -7,7 +7,7 @@ import co.edu.uniquindio.shopSystem.dto.CuponDTOs.ObtenerCuponDTO;
 import java.util.List;
 
 public interface CuponServicio {
-    void crearCupon(CrearCuponDTO cupon) throws Exception;
+    String crearCupon(CrearCuponDTO cupon) throws Exception;
 
     String editarCupon(EditarCuponDTO cupon) throws Exception;
 

@@ -2,6 +2,7 @@ package co.edu.uniquindio.shopSystem.controllers;
 
 import co.edu.uniquindio.shopSystem.dto.CarritoDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
+import co.edu.uniquindio.shopSystem.dto.CuponDTOs.CrearCuponDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.InformacionProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.ObtenerProductoDTO;
@@ -10,6 +11,7 @@ import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
 import co.edu.uniquindio.shopSystem.repositorios.ProductoRepo;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.CarritoServicio;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.CuentaServicio;
+import co.edu.uniquindio.shopSystem.servicios.interfaces.CuponServicio;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.ProductoServicio;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class AutenticacionController {
     private final ProductoRepo productoRepo;
     private final ProductoServicio productoServicio;
     private final CarritoServicio carritoServicio;
+    private final CuponServicio cuponServicio;
 
 
     @PostMapping("/iniciar-sesion")
@@ -138,5 +141,10 @@ public class AutenticacionController {
         return ResponseEntity.ok(new MensajeDTO<>(false, "Producto eliminado exitosamente"));
     }
 
+    @PostMapping("/cupon/crear")
+    public ResponseEntity<MensajeDTO<String>> crearCupon(@Valid @RequestBody CrearCuponDTO cuponDTO) throws Exception {
+        cuponServicio.crearCupon(cuponDTO);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Cupón creado correctamente"));
+    }
 }
 
