@@ -5,16 +5,16 @@ import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.CuponDTOs.CrearCuponDTO;
 import co.edu.uniquindio.shopSystem.dto.CuponDTOs.InformacionCuponDTO;
 import co.edu.uniquindio.shopSystem.dto.CuponDTOs.AplicarCuponDTO;
+import co.edu.uniquindio.shopSystem.dto.OrdenDTO.CrearOrdenDTO;
+import co.edu.uniquindio.shopSystem.dto.OrdenDTO.InformacionOrdenDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.InformacionProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.ObtenerProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.MensajeDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
 import co.edu.uniquindio.shopSystem.repositorios.ProductoRepo;
-import co.edu.uniquindio.shopSystem.servicios.interfaces.CarritoServicio;
-import co.edu.uniquindio.shopSystem.servicios.interfaces.CuentaServicio;
-import co.edu.uniquindio.shopSystem.servicios.interfaces.CuponServicio;
-import co.edu.uniquindio.shopSystem.servicios.interfaces.ProductoServicio;
+import co.edu.uniquindio.shopSystem.servicios.interfaces.*;
+import com.mercadopago.resources.preference.Preference;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,7 +34,7 @@ public class AutenticacionController {
     private final ProductoServicio productoServicio;
     private final CarritoServicio carritoServicio;
     private final CuponServicio cuponServicio;
-
+    private final OrdenServicio ordenServicio;
 
     @PostMapping("/iniciar-sesion")
     public ResponseEntity<MensajeDTO<TokenDTO>> iniciarSesion(@Valid @RequestBody LoginDTO loginDTO) throws Exception{
@@ -158,6 +158,26 @@ public class AutenticacionController {
     public ResponseEntity<MensajeDTO<AplicarCuponDTO>> aplicarCupon(@PathVariable String codigo) throws Exception {
         AplicarCuponDTO cupon = cuponServicio.aplicarCupon(codigo);
         return ResponseEntity.ok(new MensajeDTO<>(false, cupon));
+    }
+
+    // Realizar el pago de una orden
+    @PostMapping("/orden/realizar-pago")
+    public ResponseEntity<MensajeDTO<Preference>> realizarPago(@RequestParam("idOrden") String idOrden) throws Exception {
+        Preference preference = ordenServicio.realizarPago(idOrden);
+        return ResponseEntity.ok().body(new MensajeDTO<>(false, preference));
+    }
+
+    // Crear una nueva orden
+    @PostMapping("/orden/crear")
+    public ResponseEntity<MensajeDTO<String>> crearOrden(@RequestBody CrearOrdenDTO crearOrdenDTO) throws Exception {
+        String idOrden = ordenServicio.crearOrden(crearOrdenDTO);
+        return ResponseEntity.ok().body(new MensajeDTO<>(false, idOrden));
+    }
+
+    @GetMapping("/orden/obtener/{idOrden}")
+    public ResponseEntity<MensajeDTO<InformacionOrdenDTO>> obtenerOrdenCliente(@PathVariable String idOrden) throws Exception {
+        InformacionOrdenDTO ordenDTO = ordenServicio.obtenerOrdenCliente(idOrden);
+        return ResponseEntity.ok(new MensajeDTO<>(false, ordenDTO));
     }
 }
 

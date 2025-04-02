@@ -291,7 +291,12 @@ public class CarritoServicioImpl implements CarritoServicio {
 
     @Override
     public String vaciarCarrito(String idCliente) throws Exception {
-        Optional<Carrito> carritoOptional = carritoRepo.buscarCarritoPorId(idCliente);
+        Optional<Cuenta> clienteOptional = cuentaRepo.findById(idCliente);
+        if (clienteOptional.isEmpty()) {
+            throw new Exception("El cliente no existe");
+        }
+        Cuenta cliente = clienteOptional.get();
+        Optional<Carrito> carritoOptional = carritoRepo.buscarCarritoPorIdCliente(cliente.getUsuario().getCedula());
         if (carritoOptional.isEmpty()) {
             throw new Exception("El carrito con el id: " + idCliente + " no existe");
         }

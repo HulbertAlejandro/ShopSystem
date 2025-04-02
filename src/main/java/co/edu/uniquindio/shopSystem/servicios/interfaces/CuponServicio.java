@@ -15,6 +15,8 @@ public interface CuponServicio {
 
     InformacionCuponDTO obtenerInformacionCupon(String codigo) throws Exception;
     AplicarCuponDTO aplicarCupon(String codigo) throws Exception;
+
+    void registrarUso(String idCupon) throws Exception;
 }
 
 

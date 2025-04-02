@@ -98,5 +98,14 @@ public class ProductoServicioImpl implements ProductoServicio {
         );
     }
 
+    @Override
+    public Producto obtenerProducto(String id) throws Exception {
+        Optional<Producto> producto = productoRepo.buscarPorCodigo(id);
+        if (producto.isEmpty()) {
+            throw new Exception("El producto no existe.");
+        }
+        return producto.get();
+    }
+
 
 }

@@ -3,6 +3,7 @@ package co.edu.uniquindio.shopSystem.servicios.implementaciones;
 import co.edu.uniquindio.shopSystem.dto.CuponDTOs.*;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Cupon;
 import co.edu.uniquindio.shopSystem.modelo.enums.EstadoCupon;
+import co.edu.uniquindio.shopSystem.modelo.enums.EstadoOrden;
 import co.edu.uniquindio.shopSystem.modelo.enums.TipoCupon;
 import co.edu.uniquindio.shopSystem.repositorios.CuponRepo;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.CuponServicio;
@@ -152,11 +153,28 @@ public class CuponServicioImpl implements CuponServicio {
         }
 
         if (cupon.getTipo() == TipoCupon.MULTIPLE) {
-            if(cupon.getUsos() == 3){
+            if(cupon.getUsos() > 3){
                 throw new Exception("El cupón ya completo el numero de usos");
             }
         }
 
         return new AplicarCuponDTO(cupon.getDescuento());
+    }
+
+    @Override
+    public void registrarUso(String idCupon) throws Exception {
+        Optional<Cupon> cuponOptional = cuponRepo.buscarPorCodigo(idCupon);
+
+        if (cuponOptional.isEmpty()) {
+            throw new Exception("El cupón no existe o el código es incorrecto");
+        }
+
+        Cupon cupon = cuponOptional.get();
+
+        if (cupon.getTipo() == TipoCupon.UNICO) {
+            cupon.setEstado(EstadoCupon.NO_DISPONIBLE);
+        }
+        cupon.setUsos(cupon.getUsos() + 1);
+        cuponRepo.save(cupon);
     }
 }
