@@ -1,9 +1,9 @@
 package co.edu.uniquindio.shopSystem.servicios.implementaciones;
 
-import co.edu.uniquindio.shopSystem.dto.CuponDTOs.CrearCuponDTO;
-import co.edu.uniquindio.shopSystem.dto.CuponDTOs.EditarCuponDTO;
-import co.edu.uniquindio.shopSystem.dto.CuponDTOs.ObtenerCuponDTO;
+import co.edu.uniquindio.shopSystem.dto.CuponDTOs.*;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Cupon;
+import co.edu.uniquindio.shopSystem.modelo.enums.EstadoCupon;
+import co.edu.uniquindio.shopSystem.modelo.enums.TipoCupon;
 import co.edu.uniquindio.shopSystem.repositorios.CuponRepo;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.CuponServicio;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,5 +108,55 @@ public class CuponServicioImpl implements CuponServicio {
                         cupon.getFechaVencimiento()
                 )
         ).collect(Collectors.toList());
+    }
+
+    @Override
+    public InformacionCuponDTO obtenerInformacionCupon(String id) throws Exception {
+        Cupon cupon = obtenerCupon(id);
+        return new InformacionCuponDTO(
+                cupon.getId(),
+                cupon.getNombre(),
+                cupon.getCodigo(),
+                cupon.getDescuento(),
+                cupon.getFechaVencimiento(),
+                cupon.getTipo(),
+                cupon.getEstado()
+        );
+    }
+
+    private Cupon obtenerCupon(String id) throws Exception {
+        Optional<Cupon> cuponOptional = cuponRepo.buscarPorCodigo(id);
+
+        if (cuponOptional.isEmpty()) {
+            throw new Exception("El cupón con el id: " + id + " no existe");
+        }
+
+        return cuponOptional.get();
+    }
+
+    @Override
+    public AplicarCuponDTO aplicarCupon(String codigo) throws Exception {
+        Optional<Cupon> cuponOptional = cuponRepo.buscarPorCodigo(codigo);
+
+        if (cuponOptional.isEmpty()) {
+            throw new Exception("El cupón no existe o el código es incorrecto");
+        }
+
+        Cupon cupon = cuponOptional.get();
+        if (cupon.getEstado() != EstadoCupon.DISPONIBLE) {
+            throw new Exception("El cupón no está activo");
+        }
+
+        if (cupon.getFechaVencimiento().isBefore(LocalDateTime.now())) {
+            throw new Exception("El cupón ha vencido");
+        }
+
+        if (cupon.getTipo() == TipoCupon.MULTIPLE) {
+            if(cupon.getUsos() == 3){
+                throw new Exception("El cupón ya completo el numero de usos");
+            }
+        }
+
+        return new AplicarCuponDTO(cupon.getDescuento());
     }
 }

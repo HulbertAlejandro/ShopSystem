@@ -3,6 +3,8 @@ package co.edu.uniquindio.shopSystem.controllers;
 import co.edu.uniquindio.shopSystem.dto.CarritoDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.CuponDTOs.CrearCuponDTO;
+import co.edu.uniquindio.shopSystem.dto.CuponDTOs.InformacionCuponDTO;
+import co.edu.uniquindio.shopSystem.dto.CuponDTOs.AplicarCuponDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.InformacionProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.ObtenerProductoDTO;
@@ -15,7 +17,6 @@ import co.edu.uniquindio.shopSystem.servicios.interfaces.CuponServicio;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.ProductoServicio;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -145,6 +146,18 @@ public class AutenticacionController {
     public ResponseEntity<MensajeDTO<String>> crearCupon(@Valid @RequestBody CrearCuponDTO cuponDTO) throws Exception {
         cuponServicio.crearCupon(cuponDTO);
         return ResponseEntity.ok(new MensajeDTO<>(false, "Cupón creado correctamente"));
+    }
+
+    @GetMapping("/cupon/obtener/{codigo}")
+    public ResponseEntity<MensajeDTO<InformacionCuponDTO>> obtenerCupon(@PathVariable String codigo) throws Exception {
+        InformacionCuponDTO cupon = cuponServicio.obtenerInformacionCupon(codigo);
+        return ResponseEntity.ok(new MensajeDTO<>(false, cupon));
+    }
+
+    @GetMapping("/cupon/aplicar/{codigo}")
+    public ResponseEntity<MensajeDTO<AplicarCuponDTO>> aplicarCupon(@PathVariable String codigo) throws Exception {
+        AplicarCuponDTO cupon = cuponServicio.aplicarCupon(codigo);
+        return ResponseEntity.ok(new MensajeDTO<>(false, cupon));
     }
 }
 

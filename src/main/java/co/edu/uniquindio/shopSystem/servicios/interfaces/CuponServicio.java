@@ -1,8 +1,6 @@
 package co.edu.uniquindio.shopSystem.servicios.interfaces;
 
-import co.edu.uniquindio.shopSystem.dto.CuponDTOs.CrearCuponDTO;
-import co.edu.uniquindio.shopSystem.dto.CuponDTOs.EditarCuponDTO;
-import co.edu.uniquindio.shopSystem.dto.CuponDTOs.ObtenerCuponDTO;
+import co.edu.uniquindio.shopSystem.dto.CuponDTOs.*;
 
 import java.util.List;
 
@@ -14,4 +12,9 @@ public interface CuponServicio {
     String eliminarCupon(String id) throws Exception;
 
     List<ObtenerCuponDTO> listarCupones();
+
+    InformacionCuponDTO obtenerInformacionCupon(String codigo) throws Exception;
+    AplicarCuponDTO aplicarCupon(String codigo) throws Exception;
 }
+
+
