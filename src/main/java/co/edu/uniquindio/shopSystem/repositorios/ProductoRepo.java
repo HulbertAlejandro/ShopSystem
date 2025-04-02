@@ -29,4 +29,5 @@ public interface ProductoRepo extends MongoRepository<Producto, String> {
 
     @Query("{ 'precio' : { $gte: ?0, $lte: ?1 } }")
     List<Producto> buscarPorRangoDePrecio(float precioMinimo, float precioMaximo);
+
 }
