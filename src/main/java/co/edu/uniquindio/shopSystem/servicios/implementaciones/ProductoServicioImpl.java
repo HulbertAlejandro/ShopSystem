@@ -100,7 +100,8 @@ public class ProductoServicioImpl implements ProductoServicio {
 
     @Override
     public Producto obtenerProducto(String id) throws Exception {
-        Optional<Producto> producto = productoRepo.buscarPorCodigo(id);
+        Optional<Producto> producto = productoRepo.buscarPorReferencia(id);
+        System.out.println("Producto buscado: " + producto.get().getNombre());
         if (producto.isEmpty()) {
             throw new Exception("El producto no existe.");
         }

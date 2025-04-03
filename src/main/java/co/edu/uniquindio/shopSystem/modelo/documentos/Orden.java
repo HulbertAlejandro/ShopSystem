@@ -22,23 +22,14 @@ import java.util.List;
 public class Orden extends Carrito {
 
     private ObjectId idCliente;
-
     @Field("fecha_orden")  // Usamos un nombre de campo diferente en la base de datos
     private LocalDateTime fecha;  // Esto evita el conflicto con el campo 'fecha' en Carrito
     private String codigoPasarela;
     private List<DetalleOrden> detallesOrden;
     private Pago pago;
-    private String ordenId;
     private float total;
     private float descuento;
     private float impuesto;
     private String idCupon;
     private EstadoOrden estado;
-
-    // Método que convierte List<DetalleCarrito> a List<DetalleOrden>
-    public void setItemsFromCarrito(List<DetalleCarrito> itemsCarrito) {
-        this.detallesOrden = itemsCarrito.stream()
-                .map(item -> new DetalleOrden(/* Conversión personalizada */))
-                .toList();
-    }
 }

@@ -29,6 +29,7 @@ import jakarta.validation.constraints.NotNull;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.ObjectError;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -43,39 +44,50 @@ public class OrdenServicioImpl implements OrdenServicio {
     private final CuponServicio cuponServicio;
 
     @Override
-    public void recibirNotificacionMercadoPago(Map<String, Object> request) {
+    public void recibirNotificacionMercadoPago(Map<String, Object> request) throws Exception {
         try {
-            // Obtener el tipo de notificación
-            Object tipo = request.get("type");
 
-            // Si la notificación es de un pago entonces obtener el pago y la orden asociada
+            System.out.println("recibirNotificacionMercadoPago ENTRRRRO");
+            // Obtener el tipo de notificación (ejemplo: "payment")
+            String tipo = (String) request.get("type");
+
+            // Si la notificación es de un pago, obtener el ID del pago
             if ("payment".equals(tipo)) {
-                // Capturamos el JSON que viene en el request y lo convertimos a un String
-                String input = request.get("data").toString();
+                Map<String, Object> data = (Map<String, Object>) request.get("data");
+                String idPago = data.get("id").toString();
 
-                // Extraemos los números de la cadena, es decir, el id del pago
-                String idPago = input.replaceAll("\\D+", "");
-
-                // Se crea el cliente de MercadoPago y se obtiene el pago con el id
+                // Obtener la información del pago desde MercadoPago
                 PaymentClient client = new PaymentClient();
-                Payment payment = client.get( Long.parseLong(idPago) );
+                Payment payment = client.get(Long.parseLong(idPago));
 
-                // Obtener el id de la orden asociada al pago que viene en los metadatos
+                // Obtener el id de la orden desde los metadatos del pago
                 String idOrden = payment.getMetadata().get("id_orden").toString();
 
-                // Se obtiene la orden guardada en la base de datos y se le asigna el pago
-                Orden orden = obtenerOrden(idOrden);
+                // Buscar la orden en la base de datos
+                Optional<Orden> ordenOptional = ordenRepo.buscarOrdenPorId(idOrden);
+                Orden orden = ordenOptional.get();
+
+                // Crear el objeto Pago y asignarlo a la orden
                 Pago pago = crearPago(payment);
                 orden.setPago(pago);
+
+                // Actualizar el estado de la orden según el estado del pago
+                if ("approved".equals(payment.getStatus())) {
+                    orden.setEstado(EstadoOrden.PAGADA);
+                } else if ("rejected".equals(payment.getStatus())) {
+                    orden.setEstado(EstadoOrden.CANCELADA);
+                }
+
+                // Guardar la orden actualizada
                 ordenRepo.save(orden);
             }
 
-
         } catch (Exception e) {
             e.printStackTrace();
+            throw new Exception("Error procesando la notificación de MercadoPago: " + e.getMessage());
         }
-
     }
+
 
     private Pago crearPago(Payment payment) {
         Pago pago = new Pago();
@@ -180,6 +192,14 @@ public class OrdenServicioImpl implements OrdenServicio {
         Orden ordenGuardada = obtenerOrden(idOrden);
         List<PreferenceItemRequest> itemsPasarela = new ArrayList<>();
 
+        if ( ordenGuardada.getEstado() == EstadoOrden.CANCELADA) {
+            throw new Exception("LA ORDEN SELECCIONADA FUE CANCELADA");
+        }
+
+        if ( ordenGuardada.getEstado() == EstadoOrden.PAGADA) {
+            throw new Exception("LA ORDEN SELECCIONADA YA FUE PAGADA ");
+        }
+
         // Recorrer los items de la orden y crea los ítems de la pasarela
         for(DetalleOrden item : ordenGuardada.getDetallesOrden()){
 
@@ -201,7 +221,7 @@ public class OrdenServicioImpl implements OrdenServicio {
         }
 
         // Configurar las credenciales de MercadoPago
-        MercadoPagoConfig.setAccessToken("ACCESS_TOKEN");
+            MercadoPagoConfig.setAccessToken("APP_USR-6804257661611202-040220-21c5efb630df7224dc0e46b3e957cf3a-2368856858");
 
         // Configurar las urls de retorno de la pasarela (Frontend)
         PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
@@ -214,14 +234,13 @@ public class OrdenServicioImpl implements OrdenServicio {
         PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                 .backUrls(backUrls)
                 .items(itemsPasarela)
-                .metadata(Map.of("id_orden", ordenGuardada.getOrdenId()))
-                .notificationUrl("https://f0a4-152-202-217-146.ngrok-free.app")
+                .metadata(Map.of("id_orden", ordenGuardada.getId()))
+                .notificationUrl("https://0666-152-202-217-146.ngrok-free.app/api/auth/mercadopago/notificacion")
                 .build();
 
         // Crear la preferencia en la pasarela de MercadoPago
         PreferenceClient client = new PreferenceClient();
         Preference preference = client.create(preferenceRequest);
-
         // Guardar el código de la pasarela en la orden
         ordenGuardada.setCodigoPasarela( preference.getId() );
         ordenRepo.save(ordenGuardada);
@@ -229,35 +248,61 @@ public class OrdenServicioImpl implements OrdenServicio {
     }
 
     public Orden obtenerOrden(String idOrden) throws Exception {
+        System.out.println("🔍 Buscando orden con ID: " + idOrden);
+
         Optional<Orden> ordenOptional = ordenRepo.buscarOrdenPorObjectId(new ObjectId(idOrden));
 
         if (!ordenOptional.isPresent()) {
+            System.out.println(" No se encontró ninguna orden con ese ID en la base de datos.");
             throw new Exception("La orden con el id: " + idOrden + " no existe");
         }
 
+        System.out.println("✅ Orden encontrada: " + ordenOptional.get());
         return ordenOptional.get();
     }
 
-    public InformacionOrdenDTO obtenerOrdenCliente(String idOrden) throws Exception {
-        Optional<Orden> ordenOptional = ordenRepo.buscarOrdenPorObjectId(new ObjectId(idOrden));
-        Orden orden = ordenOptional.get();
-        if (!ordenOptional.isPresent()) {
-            throw new Exception("La orden con el id: " + idOrden + " no existe");
+
+    @Override
+    public List<InformacionOrdenDTO> ordenesUsuario(ObjectId idCliente) throws Exception {
+        List<Orden> ordenes = ordenRepo.findByIdCliente(idCliente);
+        if (ordenes.isEmpty()) {
+            throw new Exception("No existen órdenes para el usuario.");
         }
 
-        List<ItemsDTO> items = convertirListaADTO(orden.getDetallesOrden());
-
-        InformacionOrdenDTO ordenDTO = new InformacionOrdenDTO(
-                orden.getIdCliente().toString(),
+        return ordenes.stream().map(orden -> new InformacionOrdenDTO(
+                orden.getId(),
+                idCliente.toString(),
                 orden.getCodigoPasarela(),
-                items,
+                convertirListaADTO(orden.getDetallesOrden()), // Aquí pasamos los detalles correctamente
                 orden.getTotal(),
                 orden.getDescuento(),
                 orden.getImpuesto(),
+                orden.getEstado(),
+                orden.getIdCupon()
+
+        )).collect(Collectors.toList());
+    }
+
+    @Override
+    public InformacionOrdenDTO obtenerOrdenCliente(String idOrden) throws Exception {
+        Optional<Orden> ordenOptional = ordenRepo.buscarOrdenPorId(idOrden);
+        if (!ordenOptional.isPresent()) { // Verificamos antes de llamar get()
+            throw new Exception("La orden con el id: " + idOrden + " no existe");
+        }
+
+        Orden orden = ordenOptional.get();
+
+        return new InformacionOrdenDTO(
+                orden.getId(),
+                orden.getIdCliente().toString(),
+                orden.getCodigoPasarela(),
+                convertirListaADTO(orden.getDetallesOrden()),
+                orden.getTotal(),
+                orden.getDescuento(),
+                orden.getImpuesto(),
+                orden.getEstado(),
                 orden.getIdCupon()
         );
-
-        return ordenDTO;
     }
 
     public ItemsDTO convertirADTO(DetalleOrden detalleOrden) {
@@ -275,6 +320,5 @@ public class OrdenServicioImpl implements OrdenServicio {
                 .map(this::convertirADTO)
                 .collect(Collectors.toList());
     }
-
 
 }

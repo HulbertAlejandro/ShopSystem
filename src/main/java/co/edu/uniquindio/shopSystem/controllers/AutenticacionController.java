@@ -6,22 +6,30 @@ import co.edu.uniquindio.shopSystem.dto.CuponDTOs.CrearCuponDTO;
 import co.edu.uniquindio.shopSystem.dto.CuponDTOs.InformacionCuponDTO;
 import co.edu.uniquindio.shopSystem.dto.CuponDTOs.AplicarCuponDTO;
 import co.edu.uniquindio.shopSystem.dto.OrdenDTO.CrearOrdenDTO;
+import co.edu.uniquindio.shopSystem.dto.OrdenDTO.IdOrdenDTO;
 import co.edu.uniquindio.shopSystem.dto.OrdenDTO.InformacionOrdenDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.InformacionProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.ObtenerProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.MensajeDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
+import co.edu.uniquindio.shopSystem.modelo.documentos.Cuenta;
+import co.edu.uniquindio.shopSystem.modelo.documentos.Orden;
+import co.edu.uniquindio.shopSystem.repositorios.CuentaRepo;
 import co.edu.uniquindio.shopSystem.repositorios.ProductoRepo;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.*;
 import com.mercadopago.resources.preference.Preference;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
+import org.checkerframework.checker.units.qual.C;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,6 +43,7 @@ public class AutenticacionController {
     private final CarritoServicio carritoServicio;
     private final CuponServicio cuponServicio;
     private final OrdenServicio ordenServicio;
+    private final CuentaRepo cuentaRepo;
 
     @PostMapping("/iniciar-sesion")
     public ResponseEntity<MensajeDTO<TokenDTO>> iniciarSesion(@Valid @RequestBody LoginDTO loginDTO) throws Exception{
@@ -160,10 +169,10 @@ public class AutenticacionController {
         return ResponseEntity.ok(new MensajeDTO<>(false, cupon));
     }
 
-    // Realizar el pago de una orden
     @PostMapping("/orden/realizar-pago")
-    public ResponseEntity<MensajeDTO<Preference>> realizarPago(@RequestParam("idOrden") String idOrden) throws Exception {
-        Preference preference = ordenServicio.realizarPago(idOrden);
+    public ResponseEntity<MensajeDTO<Preference>> realizarPago(@Valid @RequestBody IdOrdenDTO idOrden) throws Exception {
+        System.out.println("ID DE ORDEN: " + idOrden.idOrden());
+        Preference preference = ordenServicio.realizarPago(idOrden.idOrden());
         return ResponseEntity.ok().body(new MensajeDTO<>(false, preference));
     }
 
@@ -177,7 +186,27 @@ public class AutenticacionController {
     @GetMapping("/orden/obtener/{idOrden}")
     public ResponseEntity<MensajeDTO<InformacionOrdenDTO>> obtenerOrdenCliente(@PathVariable String idOrden) throws Exception {
         InformacionOrdenDTO ordenDTO = ordenServicio.obtenerOrdenCliente(idOrden);
+        System.out.println(ordenDTO.idOrden() + "    ID ORDEN   ");
         return ResponseEntity.ok(new MensajeDTO<>(false, ordenDTO));
+    }
+
+    // Obtener todas las órdenes de un usuario
+    @GetMapping("/orden/usuario/{idUsuario}")
+    public ResponseEntity<MensajeDTO<List<InformacionOrdenDTO>>> obtenerOrdenesUsuario(@PathVariable String idUsuario) throws Exception {
+        Optional<Cuenta> cuentaOptional = cuentaRepo.findById(idUsuario);
+        Cuenta cuenta = cuentaOptional.get();
+        List<InformacionOrdenDTO> ordenes = ordenServicio.ordenesUsuario(new ObjectId(cuenta.getId()));
+        return ResponseEntity.ok().body(new MensajeDTO<>(false, ordenes));
+    }
+
+    @PostMapping("/mercadopago/notificacion")
+    public ResponseEntity<String> recibirNotificacion(@RequestBody Map<String, Object> request) {
+        try {
+            ordenServicio.recibirNotificacionMercadoPago(request);
+            return ResponseEntity.ok("Notificación recibida correctamente");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error procesando la notificación");
+        }
     }
 }
 
