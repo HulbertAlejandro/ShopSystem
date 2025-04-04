@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.ObjectError;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -47,7 +48,6 @@ public class OrdenServicioImpl implements OrdenServicio {
     public void recibirNotificacionMercadoPago(Map<String, Object> request) throws Exception {
         try {
 
-            System.out.println("recibirNotificacionMercadoPago ENTRRRRO");
             // Obtener el tipo de notificación (ejemplo: "payment")
             String tipo = (String) request.get("type");
 
@@ -71,6 +71,8 @@ public class OrdenServicioImpl implements OrdenServicio {
                 Pago pago = crearPago(payment);
                 orden.setPago(pago);
 
+                actualizarCantidadesInventario(orden);
+
                 // Actualizar el estado de la orden según el estado del pago
                 if ("approved".equals(payment.getStatus())) {
                     orden.setEstado(EstadoOrden.PAGADA);
@@ -88,6 +90,16 @@ public class OrdenServicioImpl implements OrdenServicio {
         }
     }
 
+    private void actualizarCantidadesInventario(Orden orden) {
+        for (DetalleOrden productoOrden : orden.getDetallesOrden()){
+            Optional<Producto> producto = productoRepo.buscarPorReferencia(productoOrden.getIdProducto());
+            Producto p = producto.get();
+
+            p.setUnidades(p.getUnidades() - productoOrden.getCantidad());
+            productoRepo.save(p);
+        }
+        System.out.println("Se actualizaron las unidades existentes de productos");
+    }
 
     private Pago crearPago(Payment payment) {
         Pago pago = new Pago();
@@ -143,8 +155,9 @@ public class OrdenServicioImpl implements OrdenServicio {
 
             // ✅ Vaciar carrito y registrar cupón
             carritoServicio.vaciarCarrito(crearOrdenDTO.idCliente());
-            cuponServicio.registrarUso(crearOrdenDTO.codigoCupon());
-
+            if (!crearOrdenDTO.codigoCupon().isEmpty()) {
+                cuponServicio.registrarUso(crearOrdenDTO.codigoCupon());
+            }
             // ✅ Retornar el ID de la orden creada
             return ordenGuardada.getId();
         }
@@ -188,64 +201,77 @@ public class OrdenServicioImpl implements OrdenServicio {
     @Override
     public Preference realizarPago(String idOrden) throws Exception {
 
-        // Obtener la orden guardada en la base de datos y los ítems de la orden
         Orden ordenGuardada = obtenerOrden(idOrden);
         List<PreferenceItemRequest> itemsPasarela = new ArrayList<>();
 
-        if ( ordenGuardada.getEstado() == EstadoOrden.CANCELADA) {
+        if (ordenGuardada.getEstado() == EstadoOrden.CANCELADA) {
             throw new Exception("LA ORDEN SELECCIONADA FUE CANCELADA");
         }
 
-        if ( ordenGuardada.getEstado() == EstadoOrden.PAGADA) {
-            throw new Exception("LA ORDEN SELECCIONADA YA FUE PAGADA ");
+        if (ordenGuardada.getEstado() == EstadoOrden.PAGADA) {
+            throw new Exception("LA ORDEN SELECCIONADA YA FUE PAGADA");
         }
 
-        // Recorrer los items de la orden y crea los ítems de la pasarela
-        for(DetalleOrden item : ordenGuardada.getDetallesOrden()){
+        BigDecimal totalCalculado = BigDecimal.ZERO;
 
-            // Obtener el producto
-            Producto producto = productoServicio.obtenerProducto(item.getIdProducto());
+        for (DetalleOrden item : ordenGuardada.getDetallesOrden()) {
+            BigDecimal precioUnitario = BigDecimal.valueOf(item.getPrecio()).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(item.getCantidad()));
+            totalCalculado = totalCalculado.add(subtotal);
 
-            // Crear el item de la pasarela
-            PreferenceItemRequest itemRequest =
-                    PreferenceItemRequest.builder()
-                            .id(producto.getCodigo())
-                            .title(producto.getNombre())
-                            .pictureUrl(producto.getUrlImagen())
-                            .categoryId(producto.getTipoProducto().getDescripcion())
-                            .quantity(item.getCantidad())
-                            .currencyId("COP")
-                            .unitPrice(BigDecimal.valueOf(producto.getPrecio()))
-                            .build();
+            PreferenceItemRequest itemRequest = PreferenceItemRequest.builder()
+                    .id(item.getIdProducto())
+                    .title(item.getNombreProducto())
+                    .quantity(item.getCantidad())
+                    .currencyId("COP")
+                    .unitPrice(precioUnitario) // Precio unitario
+                    .build();
+
             itemsPasarela.add(itemRequest);
         }
 
-        // Configurar las credenciales de MercadoPago
-            MercadoPagoConfig.setAccessToken("APP_USR-6804257661611202-040220-21c5efb630df7224dc0e46b3e957cf3a-2368856858");
+        // Comparar el total calculado con el total de la orden
+        BigDecimal totalOrden = BigDecimal.valueOf(ordenGuardada.getTotal()).setScale(2, RoundingMode.HALF_UP);
 
-        // Configurar las urls de retorno de la pasarela (Frontend)
+        if (totalCalculado.compareTo(totalOrden) != 0) {
+            // Ajuste para asegurar que el total de MercadoPago sea igual al de la orden
+            BigDecimal ajuste = totalOrden.subtract(totalCalculado);
+            itemsPasarela.add(
+                    PreferenceItemRequest.builder()
+                            .id("ajuste")
+                            .title("Ajuste de precio")
+                            .quantity(1)
+                            .currencyId("COP")
+                            .unitPrice(ajuste)
+                            .build()
+            );
+        }
+
+        MercadoPagoConfig.setAccessToken("APP_USR-6804257661611202-040220-21c5efb630df7224dc0e46b3e957cf3a-2368856858");
+
         PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                .success("URL PAGO EXITOSO")
-                .failure("URL PAGO FALLIDO")
-                .pending("URL PAGO PENDIENTE")
+                .success("https://tusitio.com/pago-exitoso")
+                .failure("https://tusitio.com/pago-fallido")
+                .pending("https://tusitio.com/pago-pendiente")
                 .build();
 
-        // Construir la preferencia de la pasarela con los ítems, metadatos y urls de retorno
         PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                 .backUrls(backUrls)
                 .items(itemsPasarela)
                 .metadata(Map.of("id_orden", ordenGuardada.getId()))
-                .notificationUrl("https://0666-152-202-217-146.ngrok-free.app/api/auth/mercadopago/notificacion")
+                .notificationUrl("https://0c90-152-202-217-146.ngrok-free.app/api/auth/mercadopago/notificacion")
                 .build();
 
-        // Crear la preferencia en la pasarela de MercadoPago
         PreferenceClient client = new PreferenceClient();
         Preference preference = client.create(preferenceRequest);
-        // Guardar el código de la pasarela en la orden
-        ordenGuardada.setCodigoPasarela( preference.getId() );
+
+        ordenGuardada.setCodigoPasarela(preference.getId());
         ordenRepo.save(ordenGuardada);
+
         return preference;
     }
+
+
 
     public Orden obtenerOrden(String idOrden) throws Exception {
         System.out.println("🔍 Buscando orden con ID: " + idOrden);

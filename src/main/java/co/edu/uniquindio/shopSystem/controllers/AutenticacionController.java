@@ -123,6 +123,12 @@ public class AutenticacionController {
         return new ResponseEntity<>(eventos, HttpStatus.OK);
     }
 
+    @GetMapping("/producto/obtener/{id}")
+    public ResponseEntity<InformacionProductoDTO> obtenerProducto(@PathVariable String id) throws Exception {
+        InformacionProductoDTO eventos = productoServicio.obtenerInformacionProducto(id);
+        return new ResponseEntity<>(eventos, HttpStatus.OK);
+    }
+
     @GetMapping("/carrito/obtener-informacion/{id}")
     public ResponseEntity<MensajeDTO<VistaCarritoDTO>> obtenerInformacionCarrito(@PathVariable String id) throws Exception {
         String idCarrito = carritoServicio.obtenerIdCarrito(id);

@@ -139,10 +139,6 @@ public class CuponServicioImpl implements CuponServicio {
     public AplicarCuponDTO aplicarCupon(String codigo) throws Exception {
         Optional<Cupon> cuponOptional = cuponRepo.buscarPorCodigo(codigo);
 
-        if (cuponOptional.isEmpty()) {
-            throw new Exception("El cupón no existe o el código es incorrecto");
-        }
-
         Cupon cupon = cuponOptional.get();
         if (cupon.getEstado() != EstadoCupon.DISPONIBLE) {
             throw new Exception("El cupón no está activo");
@@ -157,7 +153,6 @@ public class CuponServicioImpl implements CuponServicio {
                 throw new Exception("El cupón ya completo el numero de usos");
             }
         }
-
         return new AplicarCuponDTO(cupon.getDescuento());
     }
 
