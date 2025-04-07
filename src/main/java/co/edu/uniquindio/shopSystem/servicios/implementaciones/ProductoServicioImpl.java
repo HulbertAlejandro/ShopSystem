@@ -40,7 +40,8 @@ public class ProductoServicioImpl implements ProductoServicio {
 
     @Override
     public String editarProducto(EditarProductoDTO productoDTO) throws Exception {
-        Producto producto = productoRepo.buscarPorCodigo(productoDTO.codigo())
+
+        Producto producto = productoRepo.buscarPorReferencia(productoDTO.referencia())
                 .orElseThrow(() -> new Exception("Producto no encontrado"));
 
         producto.setReferencia(productoDTO.referencia());
@@ -48,6 +49,8 @@ public class ProductoServicioImpl implements ProductoServicio {
         producto.setTipoProducto(productoDTO.tipoProducto());
         producto.setUnidades(productoDTO.unidades());
         producto.setPrecio(productoDTO.precio());
+        producto.setDescripcion(productoDTO.descripcion());
+        producto.setUrlImagen(productoDTO.imageUrl());
 
         productoRepo.save(producto);
         return "Producto editado exitosamente";
@@ -80,12 +83,13 @@ public class ProductoServicioImpl implements ProductoServicio {
     }
 
     @Override
-    public InformacionProductoDTO obtenerInformacionProducto(String id) throws Exception{
+    public InformacionProductoDTO obtenerInformacionProducto(String id) throws Exception {
         Optional<Producto> producto = productoRepo.buscarPorReferencia(id);
-        Producto producto_base = producto.get();
         if (producto.isEmpty()) {
-            throw new Exception("El producto no está existe.");
+            throw new Exception("El producto no existe.");
         }
+
+        Producto producto_base = producto.get();
 
         return new InformacionProductoDTO(
                 producto_base.getReferencia(),
@@ -98,15 +102,27 @@ public class ProductoServicioImpl implements ProductoServicio {
         );
     }
 
+
     @Override
-    public Producto obtenerProducto(String id) throws Exception {
+    public InformacionProductoDTO obtenerProducto(String id) throws Exception {
         Optional<Producto> producto = productoRepo.buscarPorReferencia(id);
         System.out.println("Producto buscado: " + producto.get().getNombre());
         if (producto.isEmpty()) {
             throw new Exception("El producto no existe.");
         }
-        return producto.get();
+        System.out.println("Producto: " + producto.get().getNombre());
+        return new InformacionProductoDTO(
+                producto.get().getReferencia(),
+                producto.get().getNombre(),
+                producto.get().getTipoProducto(),
+                producto.get().getUrlImagen(), // <-- Este se mapea como imageUrl
+                producto.get().getUnidades(),
+                producto.get().getPrecio(),
+                producto.get().getDescripcion()
+        );
+
     }
+
 
 
 }

@@ -19,5 +19,5 @@ public interface ProductoServicio {
 
     InformacionProductoDTO obtenerInformacionProducto(String id) throws Exception;
 
-    Producto obtenerProducto (String id) throws Exception;
+    InformacionProductoDTO obtenerProducto(String referencia) throws Exception;
 }

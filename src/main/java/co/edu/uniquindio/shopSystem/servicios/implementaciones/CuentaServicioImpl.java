@@ -4,6 +4,7 @@ import co.edu.uniquindio.shopSystem.config.JWTUtils;
 import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.EmailDTOs.EmailDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
+import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.EditarProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Carrito;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Cuenta;

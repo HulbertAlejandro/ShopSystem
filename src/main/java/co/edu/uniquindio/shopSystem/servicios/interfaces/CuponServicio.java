@@ -11,7 +11,7 @@ public interface CuponServicio {
 
     String eliminarCupon(String id) throws Exception;
 
-    List<ObtenerCuponDTO> listarCupones();
+    List<ObtenerCuponDTO> listarCupones() throws Exception;
 
     InformacionCuponDTO obtenerInformacionCupon(String codigo) throws Exception;
     AplicarCuponDTO aplicarCupon(String codigo) throws Exception;

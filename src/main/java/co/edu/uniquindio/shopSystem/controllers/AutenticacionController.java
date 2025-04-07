@@ -2,13 +2,12 @@ package co.edu.uniquindio.shopSystem.controllers;
 
 import co.edu.uniquindio.shopSystem.dto.CarritoDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
-import co.edu.uniquindio.shopSystem.dto.CuponDTOs.CrearCuponDTO;
-import co.edu.uniquindio.shopSystem.dto.CuponDTOs.InformacionCuponDTO;
-import co.edu.uniquindio.shopSystem.dto.CuponDTOs.AplicarCuponDTO;
+import co.edu.uniquindio.shopSystem.dto.CuponDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.OrdenDTO.CrearOrdenDTO;
 import co.edu.uniquindio.shopSystem.dto.OrdenDTO.IdOrdenDTO;
 import co.edu.uniquindio.shopSystem.dto.OrdenDTO.InformacionOrdenDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
+import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.EditarProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.InformacionProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.ObtenerProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.MensajeDTO;
@@ -23,6 +22,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.checkerframework.checker.units.qual.C;
+import org.springframework.data.mongodb.core.aggregation.ArrayOperators;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -111,6 +111,18 @@ public class AutenticacionController {
         return ResponseEntity.ok(new MensajeDTO<>(false, productos));
     }
 
+    @DeleteMapping("/eliminar-producto/{id}")
+    public ResponseEntity<MensajeDTO<String>> eliminarProducto(@PathVariable String id) throws Exception{
+        productoServicio.eliminarProducto(id);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Producto eliminado exitosamente"));
+    }
+
+    @PutMapping("/editar-producto")
+    public ResponseEntity<MensajeDTO<String>> editarProducto(@Valid @RequestBody EditarProductoDTO producto) throws Exception{
+        productoServicio.editarProducto(producto);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Producto editado exitosamente"));
+    }
+
     @PostMapping("/carrito/agregar-item")
     public ResponseEntity<MensajeDTO<String>> agregarItemCarrito(@Valid @RequestBody ProductoCarritoDTO productoCarritoDTO) throws Exception {
         String respuesta = carritoServicio.agregarItemCarrito(productoCarritoDTO);
@@ -124,9 +136,9 @@ public class AutenticacionController {
     }
 
     @GetMapping("/producto/obtener/{id}")
-    public ResponseEntity<InformacionProductoDTO> obtenerProducto(@PathVariable String id) throws Exception {
-        InformacionProductoDTO eventos = productoServicio.obtenerInformacionProducto(id);
-        return new ResponseEntity<>(eventos, HttpStatus.OK);
+    public ResponseEntity<MensajeDTO<InformacionProductoDTO>> obtenerProducto(@PathVariable String id) throws Exception {
+        InformacionProductoDTO producto = productoServicio.obtenerProducto(id);
+        return ResponseEntity.ok(new MensajeDTO<>(false, producto));
     }
 
     @GetMapping("/carrito/obtener-informacion/{id}")
@@ -163,6 +175,18 @@ public class AutenticacionController {
         return ResponseEntity.ok(new MensajeDTO<>(false, "Cupón creado correctamente"));
     }
 
+    @DeleteMapping("/eliminar-cupon/{id}")
+    public ResponseEntity<MensajeDTO<String>> eliminarCupon(@PathVariable String id) throws Exception{
+        cuponServicio.eliminarCupon(id);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Cupon eliminado exitosamente"));
+    }
+
+    @PutMapping("/editar-cupon")
+    public ResponseEntity<MensajeDTO<String>> editarCupon(@Valid @RequestBody EditarCuponDTO cupon) throws Exception{
+        cuponServicio.editarCupon(cupon);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Cupon editado exitosamente"));
+    }
+
     @GetMapping("/cupon/obtener/{codigo}")
     public ResponseEntity<MensajeDTO<InformacionCuponDTO>> obtenerCupon(@PathVariable String codigo) throws Exception {
         InformacionCuponDTO cupon = cuponServicio.obtenerInformacionCupon(codigo);
@@ -173,6 +197,12 @@ public class AutenticacionController {
     public ResponseEntity<MensajeDTO<AplicarCuponDTO>> aplicarCupon(@PathVariable String codigo) throws Exception {
         AplicarCuponDTO cupon = cuponServicio.aplicarCupon(codigo);
         return ResponseEntity.ok(new MensajeDTO<>(false, cupon));
+    }
+
+    @GetMapping("/listar-cupones")
+    public ResponseEntity<MensajeDTO<List<ObtenerCuponDTO>>> listarCupones() throws Exception {
+        List<ObtenerCuponDTO> cupones = cuponServicio.listarCupones();
+        return ResponseEntity.ok(new MensajeDTO<>(false, cupones));
     }
 
     @PostMapping("/orden/realizar-pago")

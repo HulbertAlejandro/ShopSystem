@@ -2,6 +2,7 @@ package co.edu.uniquindio.shopSystem.servicios.interfaces;
 
 import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
+import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.EditarProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
 import jakarta.validation.Valid;
 
@@ -35,4 +36,5 @@ public interface CuentaServicio {
     TokenDTO verificarCuenta(VerificacionDTO verificacionDTO) throws Exception;
 
     void crearProducto(@Valid CrearProductoDTO producto) throws Exception;
+
 }

@@ -6,8 +6,10 @@ public record EditarProductoDTO(
         String codigo,
         String referencia,
         String nombre,
+        String imageUrl,
         TipoProducto tipoProducto,
         int unidades,
-        float precio
+        float precio,
+        String descripcion
 ) {}
 

@@ -97,7 +97,7 @@ public class CuponServicioImpl implements CuponServicio {
     }
 
     @Override
-    public List<ObtenerCuponDTO> listarCupones() {
+    public List<ObtenerCuponDTO> listarCupones() throws Exception{
         return cuponRepo.findAll().stream().map(cupon ->
                 new ObtenerCuponDTO(
                         cupon.getId(),
