@@ -27,6 +27,12 @@ public class CuponServicioImpl implements CuponServicio {
         this.cuponRepo = cuponRepo;
     }
 
+    /**
+     * Crea un nuevo cupón en el sistema con validaciones de negocio
+     * @param cuponDTO DTO con los datos del cupón a crear
+     * @return ID del cupón creado
+     * @throws Exception Si el código ya existe, validaciones fallidas o errores de persistencia
+     */
     @Override
     public String crearCupon(CrearCuponDTO cuponDTO) throws Exception {
         Optional<Cupon> cuponOptional = cuponRepo.buscarPorCodigo(cuponDTO.codigo());
@@ -70,6 +76,12 @@ public class CuponServicioImpl implements CuponServicio {
         return cuponCreado.getId();
     }
 
+    /**
+     * Actualiza la información de un cupón existente
+     * @param cuponDTO DTO con los nuevos datos del cupón
+     * @return Mensaje de confirmación
+     * @throws Exception Si el cupón no existe o hay errores de validación
+     */
     @Override
     public String editarCupon(EditarCuponDTO cuponDTO) throws Exception {
         Cupon cupon = cuponRepo.findById(cuponDTO.id())
@@ -86,6 +98,12 @@ public class CuponServicioImpl implements CuponServicio {
         return "Cupón editado exitosamente";
     }
 
+    /**
+     * Elimina permanentemente un cupón del sistema
+     * @param id Identificador único del cupón
+     * @return Mensaje de confirmación
+     * @throws Exception Si el cupón no existe
+     */
     @Override
     public String eliminarCupon(String id) throws Exception {
         if (!cuponRepo.existsById(id)) {
@@ -96,6 +114,11 @@ public class CuponServicioImpl implements CuponServicio {
         return "Cupón eliminado exitosamente";
     }
 
+    /**
+     * Obtiene una lista de todos los cupones registrados en el sistema
+     * @return Lista de DTOs con información básica de los cupones
+     * @throws Exception Si ocurre un error en la consulta
+     */
     @Override
     public List<ObtenerCuponDTO> listarCupones() throws Exception{
         return cuponRepo.findAll().stream().map(cupon ->
@@ -125,6 +148,12 @@ public class CuponServicioImpl implements CuponServicio {
         );
     }
 
+    /**
+     * Obtiene información detallada de un cupón específico
+     * @param id Identificador único del cupón
+     * @return DTO con todos los datos del cupón
+     * @throws Exception Si el cupón no existe
+     */
     private Cupon obtenerCupon(String id) throws Exception {
         Optional<Cupon> cuponOptional = cuponRepo.buscarPorCodigo(id);
 
@@ -135,6 +164,12 @@ public class CuponServicioImpl implements CuponServicio {
         return cuponOptional.get();
     }
 
+    /**
+     * Valida y aplica un cupón para su uso en una compra
+     * @param codigo Código único del cupón
+     * @return DTO con el descuento aplicable
+     * @throws Exception Si el cupón no es válido (vencido, inactivo, usos excedidos)
+     */
     @Override
     public AplicarCuponDTO aplicarCupon(String codigo) throws Exception {
         Optional<Cupon> cuponOptional = cuponRepo.buscarPorCodigo(codigo);
@@ -156,6 +191,11 @@ public class CuponServicioImpl implements CuponServicio {
         return new AplicarCuponDTO(cupon.getDescuento());
     }
 
+    /**
+     * Registra el uso de un cupón y actualiza su estado según su tipo
+     * @param idCupon Identificador único del cupón utilizado
+     * @throws Exception Si el cupón no existe o no se puede actualizar
+     */
     @Override
     public void registrarUso(String idCupon) throws Exception {
         Optional<Cupon> cuponOptional = cuponRepo.buscarPorCodigo(idCupon);

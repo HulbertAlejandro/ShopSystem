@@ -44,6 +44,11 @@ public class OrdenServicioImpl implements OrdenServicio {
     private final CarritoServicio carritoServicio;
     private final CuponServicio cuponServicio;
 
+    /**
+     * Procesa notificaciones de MercadoPago para actualizar el estado de las órdenes
+     * @param request Mapa con los datos de la notificación
+     * @throws Exception Si ocurre error al procesar la notificación
+     */
     @Override
     public void recibirNotificacionMercadoPago(Map<String, Object> request) throws Exception {
         try {
@@ -90,6 +95,10 @@ public class OrdenServicioImpl implements OrdenServicio {
         }
     }
 
+    /**
+     * Actualiza las cantidades en inventario de los productos después de una compra
+     * @param orden Orden completada con los productos vendidos
+     */
     private void actualizarCantidadesInventario(Orden orden) {
         for (DetalleOrden productoOrden : orden.getDetallesOrden()){
             Optional<Producto> producto = productoRepo.buscarPorReferencia(productoOrden.getIdProducto());
@@ -101,6 +110,11 @@ public class OrdenServicioImpl implements OrdenServicio {
         System.out.println("Se actualizaron las unidades existentes de productos");
     }
 
+    /**
+     * Crea un objeto Pago a partir de los datos de MercadoPago
+     * @param payment Objeto de pago de MercadoPago
+     * @return Entidad Pago con los datos mapeados
+     */
     private Pago crearPago(Payment payment) {
         Pago pago = new Pago();
         pago.setIdPago(payment.getId().toString());
@@ -129,6 +143,12 @@ public class OrdenServicioImpl implements OrdenServicio {
         this.cuponServicio = cuponServicio;
     }
 
+    /**
+     * Crea una nueva orden de compra con validación de concurrencia
+     * @param crearOrdenDTO DTO con los datos de la orden
+     * @return ID de la orden creada
+     * @throws Exception Si ya existe una orden para el cliente o fallan validaciones
+     */
     @Override
     public String crearOrden(CrearOrdenDTO crearOrdenDTO) throws Exception {
         synchronized (this) { // Bloquea para evitar condiciones de carrera en concurrencia
@@ -163,11 +183,20 @@ public class OrdenServicioImpl implements OrdenServicio {
         }
     }
 
-
+    /**
+     * Verifica la existencia de una orden por ID
+     * @param id Identificador de la orden
+     * @return true si la orden existe
+     */
     private boolean existeOrden(String id) {
         return ordenRepo.buscarOrdenPorId(id).isPresent();
     }
 
+    /**
+     * Convierte items DTO a entidades DetalleOrden
+     * @param itemDTO Lista de items del carrito
+     * @return Lista de detalles de orden convertidos
+     */
     public List<DetalleOrden> convertirDetalleOrden(@NotNull(message = "Debe proporcionar al menos un ítem en la orden") List<ItemsDTO> itemDTO) {
         List<DetalleOrden> detalleOrdenList = new ArrayList<>();
         for (ItemsDTO item : itemDTO) {
@@ -183,6 +212,11 @@ public class OrdenServicioImpl implements OrdenServicio {
         return detalleOrdenList;
     }
 
+    /**
+     * Convierte items de orden a entidades DetalleCarrito
+     * @param items Lista de items de la orden
+     * @return Lista de detalles de carrito convertidos
+     */
     private List<DetalleCarrito> convertirDetalleOrdenACarrito(@NotNull(message = "Debe proporcionar al menos un ítem en la orden") List<ItemsDTO> items) {
         List<DetalleCarrito> detallesCarrito = new ArrayList<>();
         for (ItemsDTO item : items) {
@@ -198,6 +232,12 @@ public class OrdenServicioImpl implements OrdenServicio {
         return detallesCarrito;
     }
 
+    /**
+     * Genera una preferencia de pago en MercadoPago
+     * @param idOrden Identificador de la orden
+     * @return Objeto Preference de MercadoPago
+     * @throws Exception Si la orden está cancelada, ya pagada o hay discrepancias en totales
+     */
     @Override
     public Preference realizarPago(String idOrden) throws Exception {
 
@@ -271,8 +311,12 @@ public class OrdenServicioImpl implements OrdenServicio {
         return preference;
     }
 
-
-
+    /**
+     * Obtiene una orden por su ID
+     * @param idOrden Identificador de la orden
+     * @return Entidad Orden encontrada
+     * @throws Exception Si no se encuentra la orden
+     */
     public Orden obtenerOrden(String idOrden) throws Exception {
         System.out.println("🔍 Buscando orden con ID: " + idOrden);
 
@@ -287,7 +331,12 @@ public class OrdenServicioImpl implements OrdenServicio {
         return ordenOptional.get();
     }
 
-
+    /**
+     * Lista todas las órdenes de un cliente
+     * @param idCliente Identificador del cliente
+     * @return Lista de DTOs con información de las órdenes
+     * @throws Exception Si no existen órdenes para el cliente
+     */
     @Override
     public List<InformacionOrdenDTO> ordenesUsuario(ObjectId idCliente) throws Exception {
         List<Orden> ordenes = ordenRepo.findByIdCliente(idCliente);
@@ -309,6 +358,12 @@ public class OrdenServicioImpl implements OrdenServicio {
         )).collect(Collectors.toList());
     }
 
+    /**
+     * Obtiene los detalles completos de una orden específica
+     * @param idOrden Identificador de la orden
+     * @return DTO con toda la información de la orden
+     * @throws Exception Si no se encuentra la orden
+     */
     @Override
     public InformacionOrdenDTO obtenerOrdenCliente(String idOrden) throws Exception {
         Optional<Orden> ordenOptional = ordenRepo.buscarOrdenPorId(idOrden);
@@ -331,6 +386,11 @@ public class OrdenServicioImpl implements OrdenServicio {
         );
     }
 
+    /**
+     * Convierte un detalle de orden a DTO
+     * @param detalleOrden Entidad DetalleOrden a convertir
+     * @return DTO con los datos mapeados
+     */
     public ItemsDTO convertirADTO(DetalleOrden detalleOrden) {
         return new ItemsDTO(
                 detalleOrden.getIdProducto(),
@@ -341,6 +401,11 @@ public class OrdenServicioImpl implements OrdenServicio {
         );
     }
 
+    /**
+     * Convierte una lista de detalles de orden a DTOs
+     * @param detallesOrden Lista de entidades DetalleOrden
+     * @return Lista de DTOs convertidos
+     */
     public List<ItemsDTO> convertirListaADTO(List<DetalleOrden> detallesOrden) {
         return detallesOrden.stream()
                 .map(this::convertirADTO)
