@@ -231,6 +231,9 @@ public class CarritoServicioImpl implements CarritoServicio {
         return new VistaCarritoDTO(carrito.getId(), detallesCarrito, fecha);
     }
 
+    /**
+     * Lista todos los carritos existentes en la base de datos y los transforma en DTOs para su presentación.
+     */
     @Override
     public List<CarritoListDTO> listarCarritos() {
         List<Carrito> carritos = carritoRepo.findAll();  // Obtener todos los carritos
@@ -240,6 +243,13 @@ public class CarritoServicioImpl implements CarritoServicio {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * Obtiene el ID del carrito asociado a un cliente, a partir del ID de la cuenta.
+     *
+     * @param id ID de la cuenta del cliente
+     * @return ID del carrito asociado
+     * @throws Exception si no se encuentra la cuenta o el carrito
+     */
     @Override
     public String obtenerIdCarrito(String id) throws Exception {
         Optional<Cuenta> cuentaOptional = cuentaRepo.findById(id);
@@ -252,6 +262,14 @@ public class CarritoServicioImpl implements CarritoServicio {
         return carrito.getId();
     }
 
+    /**
+     * Actualiza la cantidad de un producto dentro del carrito del cliente.
+     * También actualiza las unidades disponibles del producto en base a la nueva cantidad solicitada.
+     *
+     * @param actualizarItemCarritoDTO DTO con los datos necesarios para actualizar un item
+     * @return Mensaje de confirmación
+     * @throws Exception si no se encuentra el cliente, el carrito, el producto, o si no hay suficiente stock
+     */
     @Override
     public String actualizarItemCarrito(ActualizarItemCarritoDTO actualizarItemCarritoDTO) throws Exception {
         int nuevaCantidad = actualizarItemCarritoDTO.nuevaCantidad();
@@ -304,7 +322,13 @@ public class CarritoServicioImpl implements CarritoServicio {
         throw new Exception("El item no existe en el carrito");
     }
 
-
+    /**
+     * Calcula el total a pagar por todos los productos en el carrito de un cliente.
+     *
+     * @param idCliente ID del cliente
+     * @return Total del carrito
+     * @throws Exception si el carrito no existe o algún producto no está disponible
+     */
     @Override
     public double calcularTotalCarrito(String idCliente) throws Exception {
         Carrito carrito = obtenerCarritoCliente(idCliente);
@@ -317,6 +341,13 @@ public class CarritoServicioImpl implements CarritoServicio {
         return total;
     }
 
+    /**
+     * Obtiene el precio de un producto dado su ID.
+     *
+     * @param idProducto ID del producto
+     * @return Precio unitario del producto
+     * @throws Exception si el producto no existe
+     */
     private double obtenerPrecioProducto(String idProducto) throws Exception {
         Optional<Producto> producto = productoRepo.buscarPorCodigo(idProducto);
 
@@ -328,7 +359,13 @@ public class CarritoServicioImpl implements CarritoServicio {
         return producto.get().getPrecio();
     }
 
-
+    /**
+     * Obtiene el carrito asociado a un cliente.
+     *
+     * @param idCliente ID del cliente (cedula)
+     * @return Carrito del cliente
+     * @throws Exception si el carrito no existe
+     */
     private Carrito obtenerCarritoCliente(String idCliente) throws Exception {
         Optional<Carrito> carritoOptional = carritoRepo.buscarCarritoPorIdCliente(idCliente);
         if (carritoOptional.isEmpty()) {
@@ -337,6 +374,13 @@ public class CarritoServicioImpl implements CarritoServicio {
         return carritoOptional.get();
     }
 
+    /**
+     * Vacía todos los productos del carrito de un cliente.
+     *
+     * @param idCliente ID del cliente
+     * @return Mensaje de confirmación
+     * @throws Exception si el cliente o el carrito no existen
+     */
     @Override
     public String vaciarCarrito(String idCliente) throws Exception {
         Optional<Cuenta> clienteOptional = cuentaRepo.findById(idCliente);

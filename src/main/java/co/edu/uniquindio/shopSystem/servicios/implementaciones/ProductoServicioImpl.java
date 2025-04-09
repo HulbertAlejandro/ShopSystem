@@ -26,6 +26,11 @@ public class ProductoServicioImpl implements ProductoServicio {
         this.productoRepo = productoRepo;
     }
 
+    /**
+     * Crea un nuevo producto en el sistema
+     * @param productoDTO DTO con los datos del producto a crear
+     * @throws Exception Si ocurre un error durante la persistencia
+     */
     @Override
     public void crearProducto(CrearProductoDTO productoDTO) throws Exception {
         Producto producto = new Producto();
@@ -38,6 +43,12 @@ public class ProductoServicioImpl implements ProductoServicio {
         productoRepo.save(producto);
     }
 
+    /**
+     * Actualiza la información de un producto existente
+     * @param productoDTO DTO con los nuevos datos del producto
+     * @return Mensaje de confirmación de la operación
+     * @throws Exception Si el producto no existe o falla la actualización
+     */
     @Override
     public String editarProducto(EditarProductoDTO productoDTO) throws Exception {
 
@@ -56,6 +67,12 @@ public class ProductoServicioImpl implements ProductoServicio {
         return "Producto editado exitosamente";
     }
 
+    /**
+     * Elimina permanentemente un producto del sistema
+     * @param id Identificador único del producto
+     * @return Mensaje de confirmación de la eliminación
+     * @throws Exception Si el producto no existe
+     */
     @Override
     public String eliminarProducto(String id) throws Exception {
         if (!productoRepo.existsById(id)) {
@@ -66,6 +83,10 @@ public class ProductoServicioImpl implements ProductoServicio {
         return "Producto eliminado exitosamente";
     }
 
+    /**
+     * Obtiene una lista de todos los productos registrados en el sistema
+     * @return Lista de DTOs con información básica de los productos
+     */
     @Override
     public List<ObtenerProductoDTO> listarProductos() {
         return productoRepo.findAll().stream().map(producto ->
@@ -82,6 +103,12 @@ public class ProductoServicioImpl implements ProductoServicio {
         ).collect(Collectors.toList());
     }
 
+    /**
+     * Obtiene información detallada de un producto específico
+     * @param id Identificador único del producto
+     * @return DTO con todos los datos del producto
+     * @throws Exception Si el producto no existe
+     */
     @Override
     public InformacionProductoDTO obtenerInformacionProducto(String id) throws Exception {
         Optional<Producto> producto = productoRepo.buscarPorReferencia(id);
@@ -102,7 +129,12 @@ public class ProductoServicioImpl implements ProductoServicio {
         );
     }
 
-
+    /**
+     * Obtiene la información completa de un producto (versión con logs de depuración)
+     * @param id Identificador único del producto
+     * @return DTO con todos los datos del producto
+     * @throws Exception Si el producto no existe
+     */
     @Override
     public InformacionProductoDTO obtenerProducto(String id) throws Exception {
         Optional<Producto> producto = productoRepo.buscarPorReferencia(id);
@@ -120,9 +152,5 @@ public class ProductoServicioImpl implements ProductoServicio {
                 producto.get().getPrecio(),
                 producto.get().getDescripcion()
         );
-
     }
-
-
-
 }
