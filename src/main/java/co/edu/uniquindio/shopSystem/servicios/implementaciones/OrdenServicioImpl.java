@@ -299,7 +299,7 @@ public class OrdenServicioImpl implements OrdenServicio {
                 .backUrls(backUrls)
                 .items(itemsPasarela)
                 .metadata(Map.of("id_orden", ordenGuardada.getId()))
-                .notificationUrl("https://0c90-152-202-217-146.ngrok-free.app/api/auth/mercadopago/notificacion")
+                .notificationUrl("https://1646-189-50-209-152.ngrok-free.app/api/auth/mercadopago/notificacion")
                 .build();
 
         PreferenceClient client = new PreferenceClient();

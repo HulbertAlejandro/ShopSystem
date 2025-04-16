@@ -106,11 +106,13 @@ public class CuponServicioImpl implements CuponServicio {
      */
     @Override
     public String eliminarCupon(String id) throws Exception {
-        if (!cuponRepo.existsById(id)) {
+        Optional<Cupon> cuponOptional = cuponRepo.buscarPorCodigo(id);
+        if (cuponOptional.isEmpty()) {
             throw new Exception("Cupón no encontrado");
         }
-
-        cuponRepo.deleteById(id);
+        Cupon cupon = cuponOptional.get();
+        cupon.setEstado(EstadoCupon.NO_DISPONIBLE);
+        cuponRepo.save(cupon);
         return "Cupón eliminado exitosamente";
     }
 
