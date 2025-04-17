@@ -9,10 +9,12 @@ import lombok.*;
 @Document("productos")
 @Getter
 @Setter
+@Data
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-
 public class Producto {
 
     @Id
