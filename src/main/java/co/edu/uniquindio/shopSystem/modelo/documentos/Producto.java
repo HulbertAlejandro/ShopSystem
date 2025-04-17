@@ -12,15 +12,17 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+
 public class Producto {
 
     @Id
     @EqualsAndHashCode.Include
     private String codigo;
-
     private String referencia;
     private String nombre;
+    private String descripcion;
     private TipoProducto tipoProducto;
+    private String urlImagen;
     private int unidades;
     private float precio;
 }

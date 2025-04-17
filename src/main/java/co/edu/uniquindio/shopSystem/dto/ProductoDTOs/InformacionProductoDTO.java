@@ -2,8 +2,8 @@ package co.edu.uniquindio.shopSystem.dto.ProductoDTOs;
 
 import co.edu.uniquindio.shopSystem.modelo.enums.TipoProducto;
 
-public record ObtenerProductoDTO(
-        String codigo,
+
+public record InformacionProductoDTO(
         String referencia,
         String nombre,
         TipoProducto tipoProducto,
@@ -11,4 +11,5 @@ public record ObtenerProductoDTO(
         int unidades,
         float precio,
         String descripcion
-) {}
+) {
+}

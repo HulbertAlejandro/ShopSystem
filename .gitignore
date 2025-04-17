@@ -51,3 +51,4 @@ bin/
 /build/
 
 src/main/resources/*.json
+src/main/resources/application.properties

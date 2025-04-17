@@ -16,5 +16,6 @@ public class DetalleCarrito {
     private String idDetalleCarrito;
     private int cantidad;
     private String nombreProducto;
+    private float precioUnitario;
     private String idProducto;
 }

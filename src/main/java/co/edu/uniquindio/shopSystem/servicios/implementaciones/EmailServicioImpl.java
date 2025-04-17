@@ -15,10 +15,19 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 
+/**
+ * Implementación del servicio {@link EmailServicio} que permite el envío de correos electrónicos
+ * utilizando la biblioteca Simple Java Mail y el servidor SMTP de Gmail.
+ */
 @Service
 public class EmailServicioImpl implements EmailServicio {
 
-
+    /**
+     * Envía un correo electrónico de forma asíncrona utilizando los datos proporcionados en el {@link EmailDTO}.
+     *
+     * @param emailDTO objeto que contiene el destinatario, asunto y cuerpo del correo
+     * @throws Exception si ocurre algún error al construir o enviar el correo
+     */
     @Override
     @Async
     public void enviarCorreo(EmailDTO emailDTO) throws Exception {
@@ -43,12 +52,24 @@ public class EmailServicioImpl implements EmailServicio {
         }
     }
 
+    /**
+     * Método pendiente de implementación que enviaría un correo de recuperación de contraseña.
+     *
+     * @param correo_destino dirección de correo electrónico del destinatario
+     * @throws Exception si ocurre algún error durante el proceso
+     */
     @Override
     public void enviarCorreoRecuperacion(String correo_destino) throws Exception {
 
     }
 
-
+    /**
+     * Envía un correo con un archivo adjunto, útil por ejemplo para enviar comprobantes de pago.
+     *
+     * @param emailDTO objeto con los datos del correo
+     * @param archivoAdjunto archivo a adjuntar en el correo
+     * @throws Exception si ocurre algún error durante el envío
+     */
     public void enviarCorreoPago(EmailDTO emailDTO, File archivoAdjunto) throws Exception {
         // Limpiar el destinatario para evitar caracteres indeseados
         String destinatarioLimpio = emailDTO.destinatario().trim().replace("\"", "");
@@ -79,7 +100,12 @@ public class EmailServicioImpl implements EmailServicio {
 
     //METODOS DE PRUEBA DE JUNIT
 
-
+    /**
+     * Método de prueba que envía un correo electrónico de forma asíncrona.
+     *
+     * @param emailDTO objeto con la información del correo de prueba
+     * @throws Exception si ocurre algún error durante el envío
+     */
     @Override
     @Async
     public void enviarCorreoPrueba(EmailDTO emailDTO) throws Exception {
@@ -103,6 +129,12 @@ public class EmailServicioImpl implements EmailServicio {
         }
     }
 
+    /**
+     * Método de prueba que simula el envío de un correo de recuperación con un código fijo ("000000").
+     *
+     * @param correo_destino dirección del destinatario
+     * @throws Exception si ocurre un error al enviar el correo
+     */
     @Async
     @Override
     public void enviarCorreoRecuperacionPrueba(String correo_destino) throws Exception {
