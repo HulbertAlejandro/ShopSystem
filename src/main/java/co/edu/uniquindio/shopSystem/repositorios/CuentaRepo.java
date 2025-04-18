@@ -27,4 +27,6 @@ public interface CuentaRepo extends MongoRepository<Cuenta, String> {
     @Query(value = "{ 'rol' : 'CLIENTE' }")
     List<Cuenta> obtenerClientes();
 
+    @Query(value = "{ 'estadoCuenta' : 'ACTIVO' }")
+    List<Cuenta> obtenerClientesActivos();
 }

@@ -3,6 +3,7 @@ package co.edu.uniquindio.shopSystem.servicios.implementaciones;
 import co.edu.uniquindio.shopSystem.config.JWTUtils;
 import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.EmailDTOs.EmailDTO;
+import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Cuenta;
 import co.edu.uniquindio.shopSystem.modelo.enums.EstadoCuenta;
@@ -482,6 +483,11 @@ public class CuentaServicioImpl implements CuentaServicio {
         // Genera el token
         Map<String, Object> map = construirClaims(cuenta_usuario);
         return new TokenDTO(jwtUtils.generarToken(cuenta_usuario.getEmail(), map));
+    }
+
+    @Override
+    public void crearProducto(CrearProductoDTO producto) throws Exception {
+
     }
 
     public Cuenta obtenerCuentaId(String id) throws Exception {
