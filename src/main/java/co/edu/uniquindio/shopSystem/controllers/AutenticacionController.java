@@ -36,7 +36,6 @@ import java.util.Optional;
 @RequestMapping("/api/auth")
 public class AutenticacionController {
 
-
     private final CuentaServicio cuentaServicio;
     private final ProductoRepo productoRepo;
     private final ProductoServicio productoServicio;
@@ -52,7 +51,7 @@ public class AutenticacionController {
     }
 
     @PostMapping("/crear-cuenta")
-    public ResponseEntity<MensajeDTO<String>> crearCuenta(@RequestBody @Valid   CrearCuentaDTO cuenta) throws Exception{
+    public ResponseEntity<MensajeDTO<String>> crearCuenta(@RequestBody @Valid CrearCuentaDTO cuenta) throws Exception{
         cuentaServicio.crearCuenta(cuenta);
         return ResponseEntity.ok(new MensajeDTO<>(false, "Cuenta creada exitosamente"));
     }
@@ -245,4 +244,3 @@ public class AutenticacionController {
         }
     }
 }
-
