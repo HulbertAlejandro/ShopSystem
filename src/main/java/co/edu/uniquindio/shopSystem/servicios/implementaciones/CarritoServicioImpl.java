@@ -91,6 +91,11 @@ public class CarritoServicioImpl implements CarritoServicio {
             throw new IllegalArgumentException("Las unidades deben ser mayores a cero");
         }
 
+        //Se verifican que las cantidades ingresadas del producto no sean nulas
+        if (productoCarritoDTO.unidades() > productoSeleccionado.getUnidades()) {
+            throw new IllegalArgumentException("Las unidades seleccionadas no estan disponibles");
+        }
+
         /***
          * Se crea la clase DetalleCarrito para ingresar los datos de los productos seleccionados
          */

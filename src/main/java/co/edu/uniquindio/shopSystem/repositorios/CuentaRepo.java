@@ -24,8 +24,9 @@ public interface CuentaRepo extends MongoRepository<Cuenta, String> {
     @Query(value = "{}", fields = "{ 'email' : 1 }")
     List<String> obtenerTodosLosCorreos();
 
-    @Query(value = "{ 'rol' : 'CLIENTE' }")
-    List<Cuenta> obtenerClientes();
+    @Query(value = "{ 'rol' : 'CLIENTE', 'estadoCuenta': 'ACTIVO' }")
+    List<Cuenta> obtenerClientesActivos();
+
 
     @Query(value = "{ 'estadoCuenta' : 'ACTIVO' }")
     List<Cuenta> obtenerClientesActivos();
