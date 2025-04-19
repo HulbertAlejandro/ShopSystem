@@ -4,22 +4,16 @@ import co.edu.uniquindio.shopSystem.config.JWTUtils;
 import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.EmailDTOs.EmailDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
-import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.EditarProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
-import co.edu.uniquindio.shopSystem.modelo.documentos.Carrito;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Cuenta;
-import co.edu.uniquindio.shopSystem.modelo.documentos.Producto;
 import co.edu.uniquindio.shopSystem.modelo.enums.EstadoCuenta;
 import co.edu.uniquindio.shopSystem.modelo.enums.Rol;
 import co.edu.uniquindio.shopSystem.modelo.vo.CodigoValidacion;
 import co.edu.uniquindio.shopSystem.modelo.vo.Usuario;
-import co.edu.uniquindio.shopSystem.repositorios.CarritoRepo;
 import co.edu.uniquindio.shopSystem.repositorios.CuentaRepo;
-import co.edu.uniquindio.shopSystem.repositorios.ProductoRepo;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.CuentaServicio;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.EmailServicio;
 
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,37 +22,23 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 
-/**
- * Servicio que implementa la lógica de negocio relacionada con la gestión de cuentas de usuario.
- */
 @Service
 @Transactional
 public class CuentaServicioImpl implements CuentaServicio {
 
     private final EmailServicio emailServicio;
-    private final CarritoRepo carritoRepo;
     private JWTUtils jwtUtils;
     private final CuentaRepo cuentaRepo;
-    private final ProductoRepo productoRepo;
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    public CuentaServicioImpl(CuentaRepo cuentaRepo, EmailServicio emailServicio, BCryptPasswordEncoder passwordEncoder, JWTUtils jwtUtils, ProductoRepo productoRepo, CarritoRepo carritoRepo) {
+    public CuentaServicioImpl(CuentaRepo cuentaRepo, EmailServicio emailServicio, BCryptPasswordEncoder passwordEncoder, JWTUtils jwtUtils) {
         this.cuentaRepo = cuentaRepo;
         this.emailServicio = emailServicio;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
-        this.productoRepo = productoRepo;
-        this.carritoRepo = carritoRepo;
     }
 
-    /**
-     * Refresca el token JWT si el token actual ha expirado.
-     *
-     * @param tokenDTO DTO que contiene el token actual.
-     * @return Un nuevo TokenDTO con un token JWT actualizado.
-     * @throws Exception Si el token aún es válido o si la cuenta asociada no está activa.
-     */
     @Override
     public TokenDTO refreshToken(TokenDTO tokenDTO) throws Exception {
         String tokenActual = tokenDTO.token();
@@ -89,13 +69,7 @@ public class CuentaServicioImpl implements CuentaServicio {
         }
     }
 
-    /**
-     * Crea una nueva cuenta de usuario. Si el correo corresponde al administrador, activa la cuenta inmediatamente;
-     * de lo contrario, la cuenta queda inactiva y se envía un código de activación al correo.
-     *
-     * @param cuenta Objeto con los datos necesarios para crear la cuenta.
-     * @throws Exception Si ya existe una cuenta con la cédula o correo proporcionado.
-     */
+
     @Override
     public void crearCuenta(CrearCuentaDTO cuenta) throws Exception {
 
@@ -140,13 +114,9 @@ public class CuentaServicioImpl implements CuentaServicio {
 
         cuentaRepo.save(nuevaCuenta);
 
-        Carrito carrito = Carrito.builder()
-                .idUsuario(nuevaCuenta.getUsuario().getCedula())
-                .fecha(LocalDateTime.now())
-                .items(new ArrayList<>())
-                .build();
+        // NESTOR CASTELBLANCO 2/03/25
+        // COMENTE LA LINEAS DE ABAJO YA QUE SE ROMPÍA EL BACKEND AL ENVIAR EL CORREO
 
-        carritoRepo.save(carrito);
 
         // Enviar correo de activación solo si no es administrador
         if (!"admin@gmail.com".equals(cuenta.correo())) {
@@ -156,31 +126,15 @@ public class CuentaServicioImpl implements CuentaServicio {
 
     }
 
-    /**
-     * Verifica si ya existe una cuenta registrada con la cédula proporcionada.
-     *
-     * @param cedula Cédula a verificar.
-     * @return true si existe una cuenta con esa cédula, false en caso contrario.
-     */
+
     private boolean existeCedula(String cedula) {
         return cuentaRepo.buscarCuentaPorCedula(cedula).isPresent();
     }
 
-    /**
-     * Verifica si ya existe una cuenta registrada con el correo proporcionado.
-     *
-     * @param correo Correo a verificar.
-     * @return true si existe una cuenta con ese correo, false en caso contrario.
-     */
     private boolean existeCorreo(String correo) {
         return cuentaRepo.buscarCuentaPorCorreo(correo).isPresent();
     }
 
-    /**
-     * Genera un código de validación aleatorio de 6 caracteres, compuesto por letras mayúsculas y números.
-     *
-     * @return Código de validación generado.
-     */
     private String generarCodigoValidacion() {
         String cadena = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         StringBuilder resultado = new StringBuilder();
@@ -193,13 +147,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         return resultado.toString();
     }
 
-    /**
-     * Edita la información personal y de acceso de una cuenta existente.
-     *
-     * @param cuenta DTO con los nuevos datos de la cuenta.
-     * @return ID de la cuenta modificada.
-     * @throws Exception Si la cuenta no está activa.
-     */
     @Override
     public String editarCuenta(EditarCuentaDTO cuenta) throws Exception {
 
@@ -221,13 +168,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         return cuentaUsuario.getId();
     }
 
-    /**
-     * Elimina lógicamente una cuenta por su ID, cambiando su estado a ELIMINADO.
-     *
-     * @param id ID de la cuenta a eliminar.
-     * @return Mensaje de confirmación.
-     * @throws Exception Si la cuenta no está activa.
-     */
     @Override
     public String eliminarCuenta(String id) throws Exception {
 
@@ -243,13 +183,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         return "Eliminado";
     }
 
-    /**
-     * Elimina lógicamente una cuenta buscando por cédula, cambiando su estado a ELIMINADO.
-     *
-     * @param id Cédula de la cuenta a eliminar.
-     * @return Mensaje de confirmación.
-     * @throws Exception Si la cuenta no existe.
-     */
     @Override
     public String eliminarCuentaCedula(String id) throws Exception {
         Optional<Cuenta> cuentaOptional = cuentaRepo.buscarCuentaPorCedula(id);
@@ -264,13 +197,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         }
     }
 
-    /**
-     * Obtiene una cuenta a partir de su cédula.
-     *
-     * @param id Cédula del usuario asociada a la cuenta.
-     * @return La cuenta correspondiente a la cédula.
-     * @throws Exception Si no existe ninguna cuenta con la cédula proporcionada.
-     */
     private Cuenta obtenerCuentaCedula(String id) throws Exception {
         Optional<Cuenta> cuentaOptional = cuentaRepo.buscarCuentaPorCedula(id);
 
@@ -281,13 +207,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         return cuentaOptional.get();
     }
 
-    /**
-     * Obtiene la información personal y de contacto de una cuenta activa.
-     *
-     * @param id ID de la cuenta.
-     * @return DTO con la información de la cuenta, o null si la cuenta no existe o no está activa.
-     * @throws Exception Si ocurre un error al obtener la cuenta.
-     */
     @Override
     public InformacionCuentaDTO obtenerInformacionCuenta(String id) throws Exception {
         Cuenta cuentaUsuario = obtenerCuentaId(id);
@@ -303,13 +222,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         );
     }
 
-    /**
-     * Genera y envía un código de recuperación de contraseña al correo asociado con la cuenta.
-     *
-     * @param enviarCodigoDTO DTO con el correo del usuario que solicita el código.
-     * @return Mensaje de confirmación del envío.
-     * @throws Exception Si el correo no está registrado, la cuenta no está activa, o ocurre un error al enviar el correo.
-     */
     @Override
     public String enviarCodigoRecuperacionPassword(EnviarCodigoDTO enviarCodigoDTO) throws Exception {
         // Extrae el correo del DTO
@@ -351,13 +263,7 @@ public class CuentaServicioImpl implements CuentaServicio {
         return "Se ha enviado un código a su correo, con una duración de 15 minutos";
     }
 
-    /**
-     * Cambia la contraseña de una cuenta si el código de verificación es válido y no ha expirado.
-     *
-     * @param cambiarPasswordDTO DTO con el correo, nuevo password y código de verificación.
-     * @return Mensaje de éxito si el cambio es correcto.
-     * @throws Exception Si el correo no está registrado, la cuenta no está activa, el código es incorrecto o ha expirado.
-     */
+
     @Override
     public String cambiarPassword(CambiarPasswordDTO cambiarPasswordDTO) throws Exception {
         Optional<Cuenta> cuentaOptional = cuentaRepo.buscarCuentaPorCorreo(cambiarPasswordDTO.correo());
@@ -388,13 +294,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         return "La clave se ha cambiado correctamente";
     }
 
-    /**
-     * Inicia sesión de un usuario verificando credenciales y enviando un código de activación por correo.
-     *
-     * @param loginDTO DTO con correo y contraseña.
-     * @return Token de autenticación.
-     * @throws Exception Si el usuario no existe, está eliminado, no está activo o las credenciales son incorrectas.
-     */
     @Override
     public TokenDTO iniciarSesion(LoginDTO loginDTO) throws Exception {
         try {
@@ -451,12 +350,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         }
     }
 
-    /**
-     * Lista las cuentas de usuarios con rol cliente.
-     *
-     * @return Lista de DTOs con la información de cada cliente.
-     * @throws Exception Si ocurre un error al consultar los datos.
-     */
     @Override
     public List<InformacionCuentaDTO> listarCuentasClientes() throws Exception {
         List<Cuenta> cuentas = cuentaRepo.obtenerClientesActivos();
@@ -478,13 +371,7 @@ public class CuentaServicioImpl implements CuentaServicio {
         return cuentasDTO;
     }
 
-    /**
-     * Obtiene una cuenta por su correo.
-     *
-     * @param correo Correo electrónico de la cuenta.
-     * @return Cuenta encontrada.
-     * @throws Exception Si no se encuentra una cuenta con el correo dado.
-     */
+
     private Cuenta obtenerPorEmail(String correo) throws Exception {
         Optional<Cuenta> cuentaOptional = cuentaRepo.buscarCuentaPorCorreo(correo);
 
@@ -495,12 +382,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         return cuentaOptional.get();
     }
 
-    /**
-     * Construye el mapa de claims que se incluirán en el token JWT.
-     *
-     * @param cuenta Cuenta desde la cual construir los claims.
-     * @return Mapa con la información relevante del usuario.
-     */
     private Map<String, Object> construirClaims(Cuenta cuenta) {
         if (cuenta == null) {
             throw new IllegalArgumentException("La cuenta es nula");
@@ -523,13 +404,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         return claims;
     }
 
-    /**
-     * Activa una cuenta si el código de verificación de registro es válido y no ha expirado.
-     *
-     * @param validarCuentaDTO DTO con correo y código de verificación.
-     * @return Mensaje de éxito si la cuenta se activa correctamente.
-     * @throws Exception Si la cuenta ya está activa, no existe o el código es inválido o expiró.
-     */
     @Override
     public String activarCuenta(ValidarCuentaDTO validarCuentaDTO) throws Exception {
         Optional<Cuenta> cuenta_activacion = cuentaRepo.buscarCuentaPorCorreo(validarCuentaDTO.correo());
@@ -562,13 +436,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         return "Se activo la cuenta correctamente";
     }
 
-    /**
-     * Verifica una cuenta para permitir el inicio de sesión después de ingresar el código enviado por correo.
-     *
-     * @param verificacionDTO DTO con el correo y código de verificación.
-     * @return Token de sesión si la verificación es exitosa.
-     * @throws Exception Si el código es inválido, ha expirado o la cuenta no está disponible.
-     */
     @Override
     public TokenDTO verificarCuenta(VerificacionDTO verificacionDTO) throws Exception {
         System.out.println(verificacionDTO.codigo() + " <--CODIGO/CORREO--> " + verificacionDTO.correo());
@@ -618,52 +485,11 @@ public class CuentaServicioImpl implements CuentaServicio {
         return new TokenDTO(jwtUtils.generarToken(cuenta_usuario.getEmail(), map));
     }
 
-    /**
-     * Crea un nuevo producto, validando que no exista previamente y que el precio sea válido.
-     *
-     * @param producto DTO con la información del nuevo producto.
-     * @throws Exception Si ya existe un producto con la misma referencia o el precio es inválido.
-     */
     @Override
     public void crearProducto(CrearProductoDTO producto) throws Exception {
 
-        if (existeProducto(producto.referencia())) {
-            throw new Exception("Ya existe un producto con esta referencia");
-        }
-
-        if (producto.precio() <= 0) {
-            throw new Exception("El precio no puede ser negativo");
-        }
-
-        Producto producto_nuevo = new Producto();
-        producto_nuevo.setReferencia(producto.referencia());
-        producto_nuevo.setNombre(producto.nombre());
-        producto_nuevo.setTipoProducto(producto.tipoProducto());
-        producto_nuevo.setPrecio(producto.precio());
-        producto_nuevo.setUrlImagen(producto.imageUrl());
-        producto_nuevo.setUnidades(producto.unidades());
-        producto_nuevo.setDescripcion(producto.descripcion());
-
-        productoRepo.save(producto_nuevo);
     }
 
-    /**
-     * Verifica si un producto con el código especificado existe en el repositorio.
-     *
-     * @param codigo el código del producto a verificar
-     * @return true si el producto existe, false en caso contrario
-     */
-    private boolean existeProducto(String codigo) {
-        return productoRepo.existsById(codigo);
-    }
-
-    /**
-     * Obtiene una cuenta por su ID.
-     *
-     * @param id el ID de la cuenta a buscar
-     * @return la cuenta correspondiente al ID
-     * @throws Exception si no se encuentra ninguna cuenta con el ID proporcionado
-     */
     public Cuenta obtenerCuentaId(String id) throws Exception {
         Optional<Cuenta> cuentaOptional = cuentaRepo.findById(id);
         if (cuentaOptional.isEmpty()) {
@@ -673,13 +499,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         return cuentaOptional.get();
     }
 
-    /**
-     * Obtiene una cuenta por su correo electrónico.
-     *
-     * @param email el correo electrónico de la cuenta
-     * @return la cuenta correspondiente al correo electrónico
-     * @throws Exception si no se encuentra ninguna cuenta con el correo proporcionado
-     */
     public Cuenta obtenerCuenta(String email) throws Exception {
         Optional<Cuenta> cuentaOptional = cuentaRepo.buscarCuentaPorCorreo(email);
         if (cuentaOptional.isEmpty()) {
@@ -690,12 +509,6 @@ public class CuentaServicioImpl implements CuentaServicio {
     }
 
     //METODOS DE PRUEBA DE JUNIT
-
-    /**
-     * Genera un código de validación aleatorio de 6 caracteres (letras mayúsculas y dígitos).
-     *
-     * @return el código de validación generado
-     */
     private String generarCodigoValidacionPrueba() {
         String cadena = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         StringBuilder resultado = new StringBuilder();
@@ -708,13 +521,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         return resultado.toString();
     }
 
-    /**
-     * Obtiene una cuenta por correo electrónico (versión utilizada en pruebas).
-     *
-     * @param correo el correo electrónico de la cuenta
-     * @return la cuenta correspondiente al correo
-     * @throws Exception si no se encuentra ninguna cuenta con el correo especificado
-     */
     public Cuenta obtenerPorEmailPrueba(String correo) throws Exception {
         Optional<Cuenta> cuentaOptional = cuentaRepo.buscarCuentaPorCorreo(correo);
 
@@ -725,12 +531,6 @@ public class CuentaServicioImpl implements CuentaServicio {
         return cuentaOptional.get();
     }
 
-    /**
-     * Construye un mapa de claims para pruebas a partir de una cuenta dada.
-     *
-     * @param cuenta la cuenta desde la cual extraer los datos
-     * @return un mapa con los claims: rol, nombre de usuario e ID
-     */
     private Map<String, Object> construirClaimsPrueba(Cuenta cuenta) {
         return Map.of(
                 "rol", cuenta.getRol(),

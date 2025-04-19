@@ -39,9 +39,12 @@ public class ProductoServicioImpl implements ProductoServicio {
         producto.setTipoProducto(productoDTO.tipoProducto());
         producto.setUnidades(productoDTO.unidades());
         producto.setPrecio(productoDTO.precio());
+        producto.setDescripcion(productoDTO.descripcion()); // No olvides setear la descripción
+        producto.setUrlImagen(productoDTO.imageUrl()); // Asegúrate de setear la imagen
 
         productoRepo.save(producto);
     }
+
 
     /**
      * Actualiza la información de un producto existente

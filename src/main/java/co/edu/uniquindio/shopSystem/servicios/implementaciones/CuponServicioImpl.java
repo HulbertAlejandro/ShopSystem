@@ -174,22 +174,26 @@ public class CuponServicioImpl implements CuponServicio {
      */
     @Override
     public AplicarCuponDTO aplicarCupon(String codigo) throws Exception {
-        Optional<Cupon> cuponOptional = cuponRepo.buscarPorCodigo(codigo);
+        Cupon cupon = cuponRepo.buscarPorCodigo(codigo).orElseThrow(() -> new Exception("El cupón no encontrado"));
 
-        Cupon cupon = cuponOptional.get();
-        if (cupon.getEstado() != EstadoCupon.DISPONIBLE) {
-            throw new Exception("El cupón no está activo");
+        // Verificar si el cupón ha excedido el número de usos permitidos
+        if (cupon.getUsos() >= 5) {
+            throw new Exception("El cupón ya completó el número de usos");
         }
 
+        // Verificar otras condiciones (por ejemplo, vencimiento, estado, etc.)
+        if (cupon.getEstado() == EstadoCupon.NO_DISPONIBLE) {
+            throw new Exception("El cupón no está activo");
+        }
         if (cupon.getFechaVencimiento().isBefore(LocalDateTime.now())) {
             throw new Exception("El cupón ha vencido");
         }
 
-        if (cupon.getTipo() == TipoCupon.MULTIPLE) {
-            if(cupon.getUsos() > 3){
-                throw new Exception("El cupón ya completo el numero de usos");
-            }
-        }
+        // Si todo es válido, aplicar el cupón y devolver el DTO con el descuento
+        // Aquí puedes incrementar el contador de usos si es necesario
+        cupon.setUsos(cupon.getUsos() + 1);
+        cuponRepo.save(cupon);
+
         return new AplicarCuponDTO(cupon.getDescuento());
     }
 

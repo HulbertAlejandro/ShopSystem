@@ -28,4 +28,6 @@ public interface CuentaRepo extends MongoRepository<Cuenta, String> {
     List<Cuenta> obtenerClientesActivos();
 
 
+    @Query(value = "{ 'estadoCuenta' : 'ACTIVO' }")
+    List<Cuenta> obtenerClientesActivos();
 }
