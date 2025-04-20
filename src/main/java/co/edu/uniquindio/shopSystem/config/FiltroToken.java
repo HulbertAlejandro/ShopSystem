@@ -17,7 +17,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
-
+/**
+ * Filtro de seguridad para validación de tokens JWT y control de acceso basado en roles.
+ * Se ejecuta en cada solicitud para proteger los endpoints de la API.
+ */
 @Component
 @RequiredArgsConstructor
 public class FiltroToken extends OncePerRequestFilter {
@@ -25,6 +28,9 @@ public class FiltroToken extends OncePerRequestFilter {
 
     private final JWTUtils jwtUtils;
 
+    /**
+     * Filtra cada solicitud HTTP para validar autenticación y autorización
+     */
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -89,12 +95,24 @@ public class FiltroToken extends OncePerRequestFilter {
 
     }
 
+    /**
+     * Obtiene el token JWT del encabezado de autorización
+     * @param req Objeto HttpServletRequest
+     * @return Token JWT (sin el prefijo "Bearer") o null si no existe
+     * @implNote Espera el formato: "Bearer <token>"
+     */
     private String getToken(HttpServletRequest req) {
         String header = req.getHeader("Authorization");
         return header != null && header.startsWith("Bearer ") ? header.replace("Bearer ", "") : null;
     }
 
-
+    /**
+     * Crea una respuesta de error estandarizada en formato JSON
+     * @param mensaje Descripción del error
+     * @param codigoError Código HTTP de error
+     * @param response Objeto HttpServletResponse para escribir la respuesta
+     * @throws IOException Si falla la escritura en la respuesta
+     */
     private void crearRespuestaError(String mensaje, int codigoError, HttpServletResponse response) throws IOException {
         MensajeDTO<String> dto = new MensajeDTO<>(true, mensaje);
 
@@ -106,7 +124,16 @@ public class FiltroToken extends OncePerRequestFilter {
         response.getWriter().close();
     }
 
-
+    /**
+     * Valida un token JWT contra un rol específico
+     * @param token Token JWT a validar
+     * @param rol Rol requerido para el acceso
+     * @return true si hay error de validación, false si es válido
+     * @throws ExpiredJwtException Si el token está expirado
+     * @throws MalformedJwtException Si el token está mal formado
+     * @throws SignatureException Si la firma es inválida
+     * @throws IllegalArgumentException Si el token es nulo
+     */
     private boolean validarToken(String token, Rol rol){
         boolean error = true;
         if (token != null) {
