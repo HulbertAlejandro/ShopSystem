@@ -10,9 +10,20 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Map;
 
+/**
+ * Clase utilitaria para la creación, validación y análisis de tokens JWT.
+ * Se encarga de firmar los tokens y extraer la información (claims) que contienen.
+ */
 @Component
 public class JWTUtils {
 
+    /**
+     * Genera un token JWT a partir del correo electrónico y un mapa de claims personalizados.
+     *
+     * @param email Correo electrónico del usuario (se guarda como 'subject' en el token).
+     * @param claims Claims personalizados a incluir en el token (por ejemplo: rol, cédula, nombre).
+     * @return Token JWT generado, firmado y listo para enviar al cliente.
+     */
     public String generarToken(String email, Map<String, Object> claims) {
         Instant now = Instant.now();
 
@@ -25,12 +36,28 @@ public class JWTUtils {
                 .compact();
     }
 
+    /**
+     * Parsea y valida un JWT firmado. Lanza excepciones si el token es inválido, expirado o mal formado.
+     *
+     * @param jwtString Token JWT en formato String.
+     * @return Objeto Jws con los claims firmados.
+     * @throws ExpiredJwtException Si el token ha expirado.
+     * @throws UnsupportedJwtException Si el formato del token no es soportado.
+     * @throws MalformedJwtException Si el token está mal formado.
+     * @throws IllegalArgumentException Si el token es nulo o vacío.
+     */
     public Jws<Claims> parseJwt(String jwtString) throws ExpiredJwtException,
             UnsupportedJwtException, MalformedJwtException, IllegalArgumentException {
         JwtParser jwtParser = Jwts.parser().verifyWith(getKey()).build();
         return jwtParser.parseSignedClaims(jwtString);
     }
 
+    /**
+     * Método interno que retorna la clave secreta usada para firmar los tokens.
+     * Esta clave debe mantenerse segura y tener una longitud adecuada para HMAC SHA.
+     *
+     * @return Llave secreta para la firma HMAC-SHA.
+     */
     private SecretKey getKey() {
         String claveSecreta = "secretsecretsecretsecretsecretsecretsecretsecret";
         byte[] secretKeyBytes = claveSecreta.getBytes();

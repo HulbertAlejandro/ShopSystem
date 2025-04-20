@@ -12,9 +12,18 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Clase de configuración para inicializar Firebase en la aplicación Spring Boot.
+ */
 @Configuration
 public class FirebaseConfig {
 
+    /**
+     * Método encargado de inicializar Firebase utilizando un archivo de credenciales JSON.
+     *
+     * @return instancia de FirebaseApp si se inicializa correctamente; de lo contrario, retorna null si ya existe una instancia.
+     * @throws IOException si ocurre un error al leer el archivo de credenciales.
+     */
     @Bean
     public FirebaseApp initializeFirebase() throws IOException {
         Resource resource = new ClassPathResource("shopsystem-f50f1-firebase-adminsdk-fbsvc-9bd84225c7.json");

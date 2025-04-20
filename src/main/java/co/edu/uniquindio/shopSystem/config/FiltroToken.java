@@ -125,7 +125,7 @@ public class FiltroToken extends OncePerRequestFilter {
     }
 
     /**
-     * Valida un token JWT contra un rol específico
+     * Válida un token JWT contra un rol específico
      * @param token Token JWT a validar
      * @param rol Rol requerido para el acceso
      * @return true si hay error de validación, false si es válido
