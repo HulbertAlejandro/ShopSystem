@@ -70,6 +70,9 @@ public class CarritoServicioImpl implements CarritoServicio {
         //Se agrega la lista de productos a DetalleCarrito para llevar el control del mismo
         List<DetalleCarrito> lista = carrito.getItems();
 
+        if(productoCarritoDTO.unidades() > productoSeleccionado.getUnidades()){
+            throw new IllegalArgumentException("La cantidad seleccionada no se encuentra disponible");
+        }
         //Lista de los productos que están actualmente en el sistema
         List<Producto> productosSistema = productoRepo.findAll();
 
