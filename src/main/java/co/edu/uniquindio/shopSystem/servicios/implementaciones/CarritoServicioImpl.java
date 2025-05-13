@@ -76,6 +76,14 @@ public class CarritoServicioImpl implements CarritoServicio {
         //Lista de los productos que están actualmente en el sistema
         List<Producto> productosSistema = productoRepo.findAll();
 
+        for (Producto productoSistema : productosSistema) {
+            Optional<Producto> productoOpt = productoRepo.buscarPorReferencia(productoSistema.getReferencia());
+            Producto producto = productoOpt.get();
+            if (productoCarritoDTO.unidades() > producto.getUnidades()) {
+                throw new Exception("El producto seleccionado no cuenta con las unidades seleccionadas");
+            }
+        }
+
         /***
          * Ciclo para validar si un producto ya fue ingresado al carrito por medio de la referencia
          * - Si no se encuentra en el carrito se agrega
