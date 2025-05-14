@@ -10,8 +10,11 @@ import co.edu.uniquindio.shopSystem.repositorios.CuentaRepo;
 import co.edu.uniquindio.shopSystem.repositorios.ProductoRepo;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.CarritoServicio;
 import org.bson.types.ObjectId;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,45 +53,35 @@ public class CarritoServicioImpl implements CarritoServicio {
      */
     @Override
     public String agregarItemCarrito(ProductoCarritoDTO productoCarritoDTO) throws Exception {
-        // Validación de entrada si el dto llega con los datos necesarios
+        // Validación de entrada
         if (productoCarritoDTO == null) {
             throw new IllegalArgumentException("El DTO del producto no puede ser nulo");
         }
 
-        //Busca la cuenta del usuario mediante la id del usuario
+        // Busca la cuenta del usuario
         Cuenta cuenta = cuentaRepo.findById(productoCarritoDTO.idUsuario())
                 .orElseThrow(() -> new Exception("No se encontró la cuenta con ID: " + productoCarritoDTO.idUsuario()));
 
-        //Busca el carrito del usuario mediante la cedula de la cuenta registrada
+        // Busca el carrito del usuario
         Carrito carrito = carritoRepo.buscarCarritoPorIdCliente(cuenta.getUsuario().getCedula())
                 .orElseThrow(() -> new Exception("El carrito no existe para el cliente con ID: " + productoCarritoDTO.idUsuario()));
 
-        //Busca el producto seleccionado en el carrito mediante la referencia del mismo
+        // Busca el producto seleccionado
         Producto productoSeleccionado = productoRepo.buscarPorReferencia(productoCarritoDTO.id())
                 .orElseThrow(() -> new Exception("Producto no encontrado con referencia: " + productoCarritoDTO.id()));
 
-        //Se agrega la lista de productos a DetalleCarrito para llevar el control del mismo
-        List<DetalleCarrito> lista = carrito.getItems();
-
-        if(productoCarritoDTO.unidades() > productoSeleccionado.getUnidades()){
+        // Verifica que la cantidad solicitada esté disponible
+        if (productoCarritoDTO.unidades() > productoSeleccionado.getUnidades()) {
             throw new IllegalArgumentException("La cantidad seleccionada no se encuentra disponible");
         }
-        //Lista de los productos que están actualmente en el sistema
-        List<Producto> productosSistema = productoRepo.findAll();
 
-        for (Producto productoSistema : productosSistema) {
-            Optional<Producto> productoOpt = productoRepo.buscarPorReferencia(productoSistema.getReferencia());
-            Producto producto = productoOpt.get();
-            if (productoCarritoDTO.unidades() > producto.getUnidades()) {
-                throw new Exception("El producto seleccionado no cuenta con las unidades seleccionadas");
-            }
+        // Verifica que las unidades ingresadas sean válidas
+        if (productoCarritoDTO.unidades() <= 0) {
+            throw new IllegalArgumentException("Las unidades deben ser mayores a cero");
         }
 
-        /***
-         * Ciclo para validar si un producto ya fue ingresado al carrito por medio de la referencia
-         * - Si no se encuentra en el carrito se agrega
-         * - Si se encuentra en el carrito se le informa al cliente que ya existe ese producto en el carrito
-         */
+        // Verifica si el producto ya está en el carrito
+        List<DetalleCarrito> lista = carrito.getItems();
         for (DetalleCarrito detalleCarrito : lista) {
             Optional<Producto> productoOpt = productoRepo.buscarPorReferencia(detalleCarrito.getIdProducto());
             Producto producto = productoOpt.get();
@@ -97,26 +90,19 @@ public class CarritoServicioImpl implements CarritoServicio {
             }
         }
 
-        //Se verifican que las cantidades ingresadas del producto no sean nulas
-        if (productoCarritoDTO.unidades() <= 0) {
-            throw new IllegalArgumentException("Las unidades deben ser mayores a cero");
-        }
-
-        /***
-         * Se crea la clase DetalleCarrito para ingresar los datos de los productos seleccionados
-         */
+        // Crea el detalle del producto a agregar
         DetalleCarrito detalleCarrito = DetalleCarrito.builder()
                 .idDetalleCarrito(String.valueOf(new ObjectId()))
                 .cantidad(productoCarritoDTO.unidades())
                 .nombreProducto(productoCarritoDTO.nombreProducto())
                 .idProducto(productoCarritoDTO.id())
-                .precioUnitario(productoCarritoDTO.precio()) // Agregar precio para consistencia
+                .precioUnitario(productoCarritoDTO.precio())
                 .build();
 
-        //Se agregan los items al carrito
+        // Agrega el producto al carrito
         carrito.getItems().add(detalleCarrito);
-        //Se guarda el carrito en el repositorio
         carritoRepo.save(carrito);
+
         return "Item agregado al carrito correctamente";
     }
 
@@ -310,21 +296,15 @@ public class CarritoServicioImpl implements CarritoServicio {
                 }
                 Producto producto = productoOptional.get();
 
-                // Calcular la diferencia de unidades (si se agregan o se quitan)
-                int diferenciaUnidades = nuevaCantidad - item.getCantidad();
-
-                // Modificar las unidades disponibles en función de la nueva cantidad
-                if (producto.getUnidades() - diferenciaUnidades < 0) {
-                    throw new Exception("No hay suficiente stock disponible para este producto.");
+                if (nuevaCantidad > producto.getUnidades()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No hay suficiente stock disponible");
                 }
-                producto.setUnidades(producto.getUnidades() - diferenciaUnidades);
 
                 // Actualizar la cantidad en el carrito
                 item.setCantidad(nuevaCantidad);
 
-                // Guardar los cambios en el producto y en el carrito
-                productoRepo.save(producto);
-                carritoRepo.save(carrito);  // Se guarda el carrito, no un solo item
+                // Guardar el carrito (no se toca el producto)
+                carritoRepo.save(carrito);
 
                 return "Cantidad de producto en el carrito actualizada exitosamente";
             }
@@ -332,6 +312,7 @@ public class CarritoServicioImpl implements CarritoServicio {
 
         throw new Exception("El item no existe en el carrito");
     }
+
 
     /**
      * Calcula el total a pagar por todos los productos en el carrito de un cliente.

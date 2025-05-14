@@ -14,19 +14,28 @@ import co.edu.uniquindio.shopSystem.dto.TokenDTOs.MensajeDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Cuenta;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Orden;
+import co.edu.uniquindio.shopSystem.repositorios.CarritoRepo;
 import co.edu.uniquindio.shopSystem.repositorios.CuentaRepo;
+import co.edu.uniquindio.shopSystem.repositorios.OrdenRepo;
 import co.edu.uniquindio.shopSystem.repositorios.ProductoRepo;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mercadopago.resources.preference.Preference;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.checkerframework.checker.units.qual.C;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,6 +52,8 @@ public class AutenticacionController {
     private final CuponServicio cuponServicio;
     private final OrdenServicio ordenServicio;
     private final CuentaRepo cuentaRepo;
+    private final OrdenRepo ordenRepo;
+    private final CarritoRepo carritoRepo;
 
     @PostMapping("/iniciar-sesion")
     public ResponseEntity<MensajeDTO<TokenDTO>> iniciarSesion(@Valid @RequestBody LoginDTO loginDTO) throws Exception{
@@ -243,4 +254,29 @@ public class AutenticacionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error procesando la notificación");
         }
     }
+
+    @GetMapping("/exportar-backup")
+    public ResponseEntity<byte[]> exportarBackup() throws IOException {
+
+        Map<String, Object> datos = new HashMap<>();
+        datos.put("ordenes", ordenRepo.findAll());
+        datos.put("productos", productoRepo.findAll());
+        datos.put("cuentas", cuentaRepo.findAll());
+        datos.put("carritos", carritoRepo.findAll());
+
+        // Serializar con ObjectMapper
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule()); // Soporte para LocalDateTime
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT); // Pretty print
+
+        byte[] jsonBytes = objectMapper.writeValueAsBytes(datos);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDisposition(ContentDisposition.attachment().filename("backup.json").build());
+
+        return new ResponseEntity<>(jsonBytes, headers, HttpStatus.OK);
+    }
+
 }
