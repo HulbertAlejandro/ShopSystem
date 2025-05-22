@@ -1,5 +1,6 @@
 package co.edu.uniquindio.shopSystem.modelo.documentos;
 
+import co.edu.uniquindio.shopSystem.modelo.enums.TipoProducto;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.*;
@@ -16,13 +17,13 @@ public class Inventario {
 
     @Id
     @EqualsAndHashCode.Include
-    private String id;
+    private String codigo;
+    private String referencia;
+    private String nombre;
+    private String descripcion;
+    private TipoProducto tipoProducto;
+    private String urlImagen;
+    private int unidades;
+    private float precio;
 
-    // Mapa de productos con su cantidad disponible
-    private Map<Producto, Integer> stockProductos;
-
-    // Método para actualizar la cantidad de un producto en el inventario
-    public void actualizarStock(Producto producto, int cantidad) {
-        stockProductos.put(producto, stockProductos.getOrDefault(producto, 0) + cantidad);
-    }
 }

@@ -1,16 +1,28 @@
 package co.edu.uniquindio.shopSystem.servicios.implementaciones;
 
+import co.edu.uniquindio.shopSystem.dto.AbastecimientoDTOs.IdOrdenReabastecimientoDTO;
+import co.edu.uniquindio.shopSystem.dto.AbastecimientoDTOs.OrdenAbastecimientoGlobalDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.EditarProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.InformacionProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.ObtenerProductoDTO;
+import co.edu.uniquindio.shopSystem.modelo.documentos.Inventario;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Producto;
+import co.edu.uniquindio.shopSystem.modelo.documentos.Reabastecimiento;
+import co.edu.uniquindio.shopSystem.modelo.enums.EstadoReabastecimiento;
+import co.edu.uniquindio.shopSystem.modelo.vo.ProductoReabastecido;
+import co.edu.uniquindio.shopSystem.repositorios.InventarioRepo;
 import co.edu.uniquindio.shopSystem.repositorios.ProductoRepo;
+import co.edu.uniquindio.shopSystem.repositorios.ReabastecimientoRepo;
+import co.edu.uniquindio.shopSystem.servicios.interfaces.InventarioServicio;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.ProductoServicio;
+import jakarta.security.auth.message.MessagePolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -20,10 +32,14 @@ import java.util.stream.Collectors;
 public class ProductoServicioImpl implements ProductoServicio {
 
     private final ProductoRepo productoRepo;
+    private final ReabastecimientoRepo reabastecimientoRepo;
+    private final InventarioRepo inventarioRepo;
 
     @Autowired
-    public ProductoServicioImpl(ProductoRepo productoRepo) {
+    public ProductoServicioImpl(ProductoRepo productoRepo, ReabastecimientoRepo reabastecimientoRepo, InventarioRepo inventarioRepo) {
         this.productoRepo = productoRepo;
+        this.reabastecimientoRepo = reabastecimientoRepo;
+        this.inventarioRepo = inventarioRepo;
     }
 
     /**
@@ -153,4 +169,84 @@ public class ProductoServicioImpl implements ProductoServicio {
                 producto.get().getDescripcion()
         );
     }
+
+    @Override
+    public void crearOrdenAbastecimiento(OrdenAbastecimientoGlobalDTO orden) {
+
+        List<ProductoReabastecido> productos = orden.productos().stream()
+                .map(dto -> ProductoReabastecido.builder()
+                        .referenciaProducto(dto.referenciaProducto())
+                        .nombreProducto(dto.nombreProducto())
+                        .cantidad(dto.cantidadAbastecer())
+                        .build())
+                .toList();
+
+        Reabastecimiento reabastecimiento = Reabastecimiento.builder()
+                .fechaCreacion(LocalDateTime.now())
+                .productos(productos)
+                .estado(EstadoReabastecimiento.PENDIENTE)// si viene del DTO
+                .build();
+
+        reabastecimientoRepo.save(reabastecimiento);
+    }
+
+    @Override
+    public void aplicarOrdenAbastecimiento(String idOrden) throws Exception{
+
+        ArrayList<Inventario> productosAlteradosInventarios = new ArrayList<>();
+        ArrayList<Producto> productosAlteradosTienda = new ArrayList<>();
+
+        Reabastecimiento reabastecimiento = reabastecimientoRepo.findById(idOrden)
+                .orElseThrow(() -> new Exception("La orden de reabastecimiento no existe."));
+
+        if (reabastecimiento.getEstado() == EstadoReabastecimiento.ENTREGADO){
+            throw new Exception("La orden de reabastecimiento ya fue entregada.");
+        }
+
+        if (reabastecimiento.getEstado() == EstadoReabastecimiento.CANCELADO){
+            throw new Exception("La orden de reabastecimiento ya fue cancelada.");
+        }
+
+        for (ProductoReabastecido productoOrdenado : reabastecimiento.getProductos()) {
+
+            Inventario productoInventario = inventarioRepo.buscarPorReferencia(productoOrdenado.getReferenciaProducto())
+                    .orElseThrow(() -> new Exception("El producto con referencia " + productoOrdenado.getReferenciaProducto() + " no existe en la bodega."));
+
+            Optional<Producto> productoTiendaOptional = productoRepo.buscarPorReferencia(productoOrdenado.getReferenciaProducto());
+
+            Producto productoTienda = new Producto();
+            if (productoTiendaOptional.isEmpty()) {
+                CrearProductoDTO crearProductoDTO = new CrearProductoDTO(
+                        productoInventario.getReferencia(),
+                        productoInventario.getNombre(),
+                        productoInventario.getTipoProducto(),
+                        productoInventario.getUrlImagen(),
+                        productoOrdenado.getCantidad(),
+                        productoInventario.getPrecio(),
+                        productoInventario.getDescripcion()
+                );
+                crearProducto(crearProductoDTO); // Asume que devuelve el producto creado
+            } else {
+                productoTienda = productoTiendaOptional.get();
+            }
+
+            if (productoInventario.getUnidades() < productoOrdenado.getCantidad()) {
+                throw new Exception("La cantidad solicitada del producto " + productoInventario.getNombre() + " no se encuentra disponible.");
+            }
+
+            productoInventario.setUnidades(productoInventario.getUnidades() - productoOrdenado.getCantidad());
+            productoTienda.setUnidades(productoTienda.getUnidades() + productoOrdenado.getCantidad());
+
+            productosAlteradosInventarios.add(productoInventario);
+            productosAlteradosTienda.add(productoTienda);
+        }
+
+        productoRepo.saveAll(productosAlteradosTienda);
+        inventarioRepo.saveAll(productosAlteradosInventarios);
+
+        reabastecimiento.setEstado(EstadoReabastecimiento.ENTREGADO);
+        reabastecimientoRepo.save(reabastecimiento);
+    }
+
+
 }

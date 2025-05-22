@@ -1,5 +1,9 @@
 package co.edu.uniquindio.shopSystem.controllers;
 
+import co.edu.uniquindio.shopSystem.dto.AbastecimientoDTOs.IdOrdenReabastecimientoDTO;
+import co.edu.uniquindio.shopSystem.dto.AbastecimientoDTOs.MostrarOrdenReabastecimientoDTO;
+import co.edu.uniquindio.shopSystem.dto.AbastecimientoDTOs.OrdenAbastecimientoDTO;
+import co.edu.uniquindio.shopSystem.dto.AbastecimientoDTOs.OrdenAbastecimientoGlobalDTO;
 import co.edu.uniquindio.shopSystem.dto.CarritoDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.CuponDTOs.*;
@@ -13,11 +17,8 @@ import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.ObtenerProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.MensajeDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Cuenta;
-import co.edu.uniquindio.shopSystem.modelo.documentos.Orden;
-import co.edu.uniquindio.shopSystem.repositorios.CarritoRepo;
-import co.edu.uniquindio.shopSystem.repositorios.CuentaRepo;
-import co.edu.uniquindio.shopSystem.repositorios.OrdenRepo;
-import co.edu.uniquindio.shopSystem.repositorios.ProductoRepo;
+import co.edu.uniquindio.shopSystem.modelo.documentos.Inventario;
+import co.edu.uniquindio.shopSystem.repositorios.*;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -26,14 +27,9 @@ import com.mercadopago.resources.preference.Preference;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
-import org.checkerframework.checker.units.qual.C;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.data.mongodb.core.aggregation.ArrayOperators;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -46,14 +42,19 @@ import java.util.Optional;
 public class AutenticacionController {
 
     private final CuentaServicio cuentaServicio;
-    private final ProductoRepo productoRepo;
     private final ProductoServicio productoServicio;
     private final CarritoServicio carritoServicio;
     private final CuponServicio cuponServicio;
     private final OrdenServicio ordenServicio;
+    private final InventarioServicio inventarioServicio;
+    private final ReabastecimientoServicio reabastecimientoServicio;
+
+    private final ProductoRepo productoRepo;
     private final CuentaRepo cuentaRepo;
     private final OrdenRepo ordenRepo;
     private final CarritoRepo carritoRepo;
+    private final InventarioRepo inventarioRepo;
+
 
     @PostMapping("/iniciar-sesion")
     public ResponseEntity<MensajeDTO<TokenDTO>> iniciarSesion(@Valid @RequestBody LoginDTO loginDTO) throws Exception{
@@ -109,46 +110,10 @@ public class AutenticacionController {
         return ResponseEntity.ok(new MensajeDTO<>(false, "Cliente eliminado exitosamente"));
     }
 
-    @PostMapping("/crear-producto")
-    public ResponseEntity<MensajeDTO<String>> crearProducto(@RequestBody @Valid CrearProductoDTO producto) throws Exception{
-        cuentaServicio.crearProducto(producto);
-        return ResponseEntity.ok(new MensajeDTO<>(false, "Producto creado exitosamente"));
-    }
-
-    @GetMapping("/listar-productos")
-    public ResponseEntity<MensajeDTO<List<ObtenerProductoDTO>>> listarProductos() throws Exception {
-        List<ObtenerProductoDTO> productos = productoServicio.listarProductos();
-        return ResponseEntity.ok(new MensajeDTO<>(false, productos));
-    }
-
-    @DeleteMapping("/eliminar-producto/{id}")
-    public ResponseEntity<MensajeDTO<String>> eliminarProducto(@PathVariable String id) throws Exception{
-        productoServicio.eliminarProducto(id);
-        return ResponseEntity.ok(new MensajeDTO<>(false, "Producto eliminado exitosamente"));
-    }
-
-    @PutMapping("/editar-producto")
-    public ResponseEntity<MensajeDTO<String>> editarProducto(@Valid @RequestBody EditarProductoDTO producto) throws Exception{
-        productoServicio.editarProducto(producto);
-        return ResponseEntity.ok(new MensajeDTO<>(false, "Producto editado exitosamente"));
-    }
-
     @PostMapping("/carrito/agregar-item")
     public ResponseEntity<MensajeDTO<String>> agregarItemCarrito(@Valid @RequestBody ProductoCarritoDTO productoCarritoDTO) throws Exception {
         String respuesta = carritoServicio.agregarItemCarrito(productoCarritoDTO);
         return ResponseEntity.ok(new MensajeDTO<>(false, respuesta));
-    }
-
-    @GetMapping("/producto/informacion/{id}")
-    public ResponseEntity<InformacionProductoDTO> obtenerInformacionProducto(@PathVariable String id) throws Exception {
-        InformacionProductoDTO eventos = productoServicio.obtenerInformacionProducto(id);
-        return new ResponseEntity<>(eventos, HttpStatus.OK);
-    }
-
-    @GetMapping("/producto/obtener/{id}")
-    public ResponseEntity<MensajeDTO<InformacionProductoDTO>> obtenerProducto(@PathVariable String id) throws Exception {
-        InformacionProductoDTO producto = productoServicio.obtenerProducto(id);
-        return ResponseEntity.ok(new MensajeDTO<>(false, producto));
     }
 
     @GetMapping("/carrito/obtener-informacion/{id}")
@@ -279,4 +244,82 @@ public class AutenticacionController {
         return new ResponseEntity<>(jsonBytes, headers, HttpStatus.OK);
     }
 
+    @PostMapping("/crear-orden-reabastecimiento")
+    public ResponseEntity<MensajeDTO<String>> crearOrdenAbastecimiento(@RequestBody @Valid OrdenAbastecimientoGlobalDTO orden) {
+        productoServicio.crearOrdenAbastecimiento(orden);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Orden de reabastecimiento creada exitosamente"));
+    }
+
+    @PostMapping("/aplicar-orden")
+    public ResponseEntity<MensajeDTO<String>> aplicarOrden(@RequestBody @Valid IdOrdenReabastecimientoDTO idOrden) throws Exception{
+        productoServicio.aplicarOrdenAbastecimiento(idOrden.idOrdenReabastecimiento());
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Stock actualizado correctamente desde la orden."));
+    }
+
+    /*** Metodos de productos (anteriores)
+     */
+    @GetMapping("/listar-productos")
+    public ResponseEntity<MensajeDTO<List<ObtenerProductoDTO>>> listarProductosLocal() throws Exception {
+        List<ObtenerProductoDTO> productos = productoServicio.listarProductos();
+        return ResponseEntity.ok(new MensajeDTO<>(false, productos));
+    }
+
+    @GetMapping("/producto/informacion/{id}")
+    public ResponseEntity<InformacionProductoDTO> obtenerInformacionProductoLocal(@PathVariable String id) throws Exception {
+        InformacionProductoDTO eventos = productoServicio.obtenerInformacionProducto(id);
+        return new ResponseEntity<>(eventos, HttpStatus.OK);
+    }
+
+    @GetMapping("/producto/obtener/{id}")
+    public ResponseEntity<MensajeDTO<InformacionProductoDTO>> obtenerProductoLocal(@PathVariable String id) throws Exception {
+        InformacionProductoDTO producto = productoServicio.obtenerProducto(id);
+        return ResponseEntity.ok(new MensajeDTO<>(false, producto));
+    }
+
+
+
+    /*** Metodos de distribuidora
+     */
+
+    @PostMapping("/crear-producto")
+    public ResponseEntity<MensajeDTO<String>> crearProductoBodega(@RequestBody @Valid CrearProductoDTO producto) throws Exception{
+        inventarioServicio.crearProducto(producto);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Producto creado exitosamente"));
+    }
+
+    @GetMapping("/listar-productos-bodega")
+    public ResponseEntity<MensajeDTO<List<ObtenerProductoDTO>>> listarProductosBodega() throws Exception {
+        List<ObtenerProductoDTO> productos = inventarioServicio.listarProductos();
+        return ResponseEntity.ok(new MensajeDTO<>(false, productos));
+    }
+
+    @DeleteMapping("/eliminar-producto/{id}")
+    public ResponseEntity<MensajeDTO<String>> eliminarProductoBodega(@PathVariable String id) throws Exception{
+        inventarioServicio.eliminarProducto(id);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Producto eliminado exitosamente"));
+    }
+
+    @PutMapping("/editar-producto")
+    public ResponseEntity<MensajeDTO<String>> editarProductoBodega(@Valid @RequestBody EditarProductoDTO producto) throws Exception{
+        inventarioServicio.editarProducto(producto);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Producto editado exitosamente"));
+    }
+
+    @GetMapping("/producto/bodega/informacion/{id}")
+    public ResponseEntity<InformacionProductoDTO> obtenerInformacionProductoBodega(@PathVariable String id) throws Exception {
+        InformacionProductoDTO eventos = inventarioServicio.obtenerInformacionProducto(id);
+        return new ResponseEntity<>(eventos, HttpStatus.OK);
+    }
+
+    @GetMapping("/producto/bodega/obtener/{id}")
+    public ResponseEntity<MensajeDTO<InformacionProductoDTO>> obtenerProductoBodega(@PathVariable String id) throws Exception {
+        InformacionProductoDTO producto = inventarioServicio.obtenerProducto(id);
+        return ResponseEntity.ok(new MensajeDTO<>(false, producto));
+    }
+
+    @GetMapping("/listar-ordenes-bodega")
+    public ResponseEntity<MensajeDTO<List<MostrarOrdenReabastecimientoDTO>>> listarOrdenesReabastecimiento() throws Exception {
+        List<MostrarOrdenReabastecimientoDTO> productos = reabastecimientoServicio.listarOrdenesReabastecimiento();
+        return ResponseEntity.ok(new MensajeDTO<>(false, productos));
+    }
 }

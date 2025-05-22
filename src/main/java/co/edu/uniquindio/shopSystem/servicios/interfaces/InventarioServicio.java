@@ -1,16 +1,15 @@
 package co.edu.uniquindio.shopSystem.servicios.interfaces;
 
-import co.edu.uniquindio.shopSystem.dto.AbastecimientoDTOs.IdOrdenReabastecimientoDTO;
 import co.edu.uniquindio.shopSystem.dto.AbastecimientoDTOs.OrdenAbastecimientoGlobalDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.EditarProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.InformacionProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.ObtenerProductoDTO;
-import jakarta.validation.Valid;
 
 import java.util.List;
 
-public interface ProductoServicio {
+public interface InventarioServicio {
+
     void crearProducto(CrearProductoDTO producto) throws Exception;
 
     String editarProducto(EditarProductoDTO producto) throws Exception;
@@ -23,7 +22,4 @@ public interface ProductoServicio {
 
     InformacionProductoDTO obtenerProducto(String referencia) throws Exception;
 
-    void crearOrdenAbastecimiento(OrdenAbastecimientoGlobalDTO orden);
-
-    void aplicarOrdenAbastecimiento(String idOrden) throws Exception;
 }

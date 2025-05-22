@@ -290,16 +290,16 @@ public class OrdenServicioImpl implements OrdenServicio {
         MercadoPagoConfig.setAccessToken("APP_USR-6804257661611202-040220-21c5efb630df7224dc0e46b3e957cf3a-2368856858");
 
         PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                .success("https://tusitio.com/pago-exitoso")
-                .failure("https://tusitio.com/pago-fallido")
-                .pending("https://tusitio.com/pago-pendiente")
+                .success("https://shop-system-frontend-822c9.web.app/api/auth/inicio")
+                .failure("https://shop-system-frontend-822c9.web.app/api/auth/pago-fallido")
+                .pending("https://shop-system-frontend-822c9.web.app/api/auth/pago-pendiente")
                 .build();
 
         PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                 .backUrls(backUrls)
                 .items(itemsPasarela)
                 .metadata(Map.of("id_orden", ordenGuardada.getId()))
-                .notificationUrl("https://1646-189-50-209-152.ngrok-free.app/api/auth/mercadopago/notificacion")
+                .notificationUrl("https://shop-system-frontend-822c9.web.app/api/auth/mercadopago/notificacion")
                 .build();
 
         PreferenceClient client = new PreferenceClient();

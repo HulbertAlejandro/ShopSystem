@@ -4,7 +4,6 @@ import co.edu.uniquindio.shopSystem.config.JWTUtils;
 import co.edu.uniquindio.shopSystem.dto.CuentaDTOs.*;
 import co.edu.uniquindio.shopSystem.dto.EmailDTOs.EmailDTO;
 import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.CrearProductoDTO;
-import co.edu.uniquindio.shopSystem.dto.ProductoDTOs.EditarProductoDTO;
 import co.edu.uniquindio.shopSystem.dto.TokenDTOs.TokenDTO;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Carrito;
 import co.edu.uniquindio.shopSystem.modelo.documentos.Cuenta;
@@ -18,13 +17,10 @@ import co.edu.uniquindio.shopSystem.repositorios.CuentaRepo;
 import co.edu.uniquindio.shopSystem.repositorios.ProductoRepo;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.CuentaServicio;
 import co.edu.uniquindio.shopSystem.servicios.interfaces.EmailServicio;
-
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -99,7 +95,7 @@ public class CuentaServicioImpl implements CuentaServicio {
     @Override
     public void crearCuenta(CrearCuentaDTO cuenta) throws Exception {
 
-        System.out.println("Datos de la cuenta que ingresaron: "+ cuenta.password() + "  " + cuenta.confirmaPassword());
+        System.out.println("Datos de la cuenta que ingresaron: " + cuenta.password() + "  " + cuenta.confirmaPassword());
 
         if (existeCedula(cuenta.cedula())) {
             throw new Exception("Ya existe una cuenta con esta cedula");
@@ -109,18 +105,36 @@ public class CuentaServicioImpl implements CuentaServicio {
             throw new Exception("Ya existe una cuenta con este correo");
         }
 
+        if (!cuenta.password().equals(cuenta.confirmaPassword())) {
+            throw new Exception("Las contraseñas no coinciden");
+        }
+
+        if (!cuenta.cedula().matches("\\d{6,10}")) {
+            throw new Exception("La cédula debe contener entre 6 y 10 dígitos numéricos");
+        }
+
+        if (cuenta.telefono() != null && !cuenta.telefono().matches("\\d{7,10}")) {
+            throw new Exception("El número de teléfono no es válido");
+        }
+
+        if (cuenta.direccion() == null || cuenta.direccion().trim().isEmpty()) {
+            throw new Exception("La dirección es obligatoria");
+        }
+
+        if (!cuenta.nombre().matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+")) {
+            throw new Exception("El nombre contiene caracteres inválidos");
+        }
+
         Cuenta nuevaCuenta = new Cuenta();
         nuevaCuenta.setEmail(cuenta.correo());
-
         nuevaCuenta.setPassword(passwordEncoder.encode(cuenta.password()));
 
-        // Verifica si el correo es admin@gmail.com
         if ("admin@gmail.com".equals(cuenta.correo()) && "1234567".equals(cuenta.password())) {
-            nuevaCuenta.setRol(Rol.ADMINISTRADOR);  // Asigna el rol de ADMINISTRADOR
-            nuevaCuenta.setEstadoCuenta(EstadoCuenta.ACTIVO);  // Asigna la cuenta como ACTIVA
+            nuevaCuenta.setRol(Rol.ADMINISTRADOR);
+            nuevaCuenta.setEstadoCuenta(EstadoCuenta.ACTIVO);
         } else {
-            nuevaCuenta.setRol(Rol.CLIENTE);  // Si no es admin, asigna el rol de CLIENTE
-            nuevaCuenta.setEstadoCuenta(EstadoCuenta.INACTIVO);  // La cuenta estará INACTIVA por defecto
+            nuevaCuenta.setRol(Rol.CLIENTE);
+            nuevaCuenta.setEstadoCuenta(EstadoCuenta.INACTIVO);
         }
 
         nuevaCuenta.setFechaRegistro(LocalDateTime.now());
@@ -128,7 +142,8 @@ public class CuentaServicioImpl implements CuentaServicio {
                 .cedula(cuenta.cedula())
                 .direccion(cuenta.direccion())
                 .nombre(cuenta.nombre())
-                .telefono(cuenta.telefono()).build());
+                .telefono(cuenta.telefono())
+                .build());
 
         String codigoActivacion = generarCodigoValidacion();
         nuevaCuenta.setCodigoValidacionRegistro(
@@ -148,12 +163,11 @@ public class CuentaServicioImpl implements CuentaServicio {
 
         carritoRepo.save(carrito);
 
-        // Enviar correo de activación solo si no es administrador
         if (!"admin@gmail.com".equals(cuenta.correo())) {
             emailServicio.enviarCorreo(new EmailDTO("Codigo de activación de cuenta de SG Supermercados",
-                    "El código de activación asignado para activar la cuenta es el siguiente: " + codigoActivacion, nuevaCuenta.getEmail()));
+                    "El código de activación asignado para activar la cuenta es el siguiente: " + codigoActivacion,
+                    nuevaCuenta.getEmail()));
         }
-
     }
 
     /**

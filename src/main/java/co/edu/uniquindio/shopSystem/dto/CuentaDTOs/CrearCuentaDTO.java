@@ -10,7 +10,7 @@ public record CrearCuentaDTO(
         @Length(max = 10, message = "Ingrese un telefono valido") String telefono,
         @Length(max = 30, message = "Ingrese una direccion valida") String direccion,
         @NotBlank @Length(max = 30, message = "Ingrese un correo valido") @Email String correo,
-        @NotBlank @Length(min = 6, message = "La contrasena debe tener mas de 6 caracteres") String password,
+        @NotBlank @Length(min = 6, message = "La contraseña debe tener mas de 6 caracteres") String password,
         String confirmaPassword
 ){
 }
