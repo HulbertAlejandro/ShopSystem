@@ -218,17 +218,21 @@ public class ProductoServicioImpl implements ProductoServicio {
 
             Producto productoTienda = new Producto();
             if (productoTiendaOptional.isEmpty()) {
-                Producto crearProducto = new Producto();
-                crearProducto.setNombre(productoOrdenado.getNombreProducto());
-                crearProducto.setReferencia(productoOrdenado.getReferenciaProducto());
-                crearProducto.setDescripcion(productoInventario.getDescripcion());
-                crearProducto.setTipoProducto(productoInventario.getTipoProducto());
-                crearProducto.setUrlImagen(productoInventario.getUrlImagen());
-                crearProducto.setUnidades(productoInventario.getUnidades());
-                crearProducto.setPrecio(productoInventario.getPrecio());
-                productosAlteradosTienda.add(crearProducto);
-            } else {
-                productoTienda = productoTiendaOptional.get();
+
+                if (productoInventario.getUnidades() < productoOrdenado.getCantidad()) {
+                    throw new Exception("La cantidad solicitada del producto " + productoInventario.getNombre() + " no se encuentra disponible.");
+                }
+                else {
+                    Producto crearProducto = new Producto();
+                    crearProducto.setNombre(productoOrdenado.getNombreProducto());
+                    crearProducto.setReferencia(productoOrdenado.getReferenciaProducto());
+                    crearProducto.setDescripcion(productoInventario.getDescripcion());
+                    crearProducto.setTipoProducto(productoInventario.getTipoProducto());
+                    crearProducto.setUrlImagen(productoInventario.getUrlImagen());
+                    crearProducto.setUnidades(productoOrdenado.getCantidad());
+                    crearProducto.setPrecio(productoInventario.getPrecio());
+                    productosAlteradosTienda.add(crearProducto);
+                }
             }
 
             if (productoInventario.getUnidades() < productoOrdenado.getCantidad()) {
