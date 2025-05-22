@@ -55,9 +55,11 @@ public class ProductoServicioImpl implements ProductoServicio {
         producto.setTipoProducto(productoDTO.tipoProducto());
         producto.setUnidades(productoDTO.unidades());
         producto.setPrecio(productoDTO.precio());
-
+        producto.setUrlImagen(productoDTO.imageUrl()); // <-- importante
+        producto.setDescripcion(productoDTO.descripcion()); // <-- importante
         productoRepo.save(producto);
     }
+
 
     /**
      * Actualiza la información de un producto existente
@@ -216,16 +218,16 @@ public class ProductoServicioImpl implements ProductoServicio {
 
             Producto productoTienda = new Producto();
             if (productoTiendaOptional.isEmpty()) {
-                CrearProductoDTO crearProductoDTO = new CrearProductoDTO(
-                        productoInventario.getReferencia(),
-                        productoInventario.getNombre(),
-                        productoInventario.getTipoProducto(),
-                        productoInventario.getUrlImagen(),
-                        productoOrdenado.getCantidad(),
-                        productoInventario.getPrecio(),
-                        productoInventario.getDescripcion()
-                );
-                crearProducto(crearProductoDTO); // Asume que devuelve el producto creado
+                Producto crearProducto = new Producto();
+                crearProducto.setCodigo(productoOrdenado.getReferenciaProducto());
+                crearProducto.setNombre(productoOrdenado.getNombreProducto());
+                crearProducto.setReferencia(productoOrdenado.getReferenciaProducto());
+                crearProducto.setDescripcion(productoInventario.getDescripcion());
+                crearProducto.setTipoProducto(productoInventario.getTipoProducto());
+                crearProducto.setUrlImagen(productoInventario.getUrlImagen());
+                crearProducto.setUnidades(productoInventario.getUnidades());
+                crearProducto.setPrecio(productoInventario.getPrecio());
+                productosAlteradosTienda.add(crearProducto);
             } else {
                 productoTienda = productoTiendaOptional.get();
             }
