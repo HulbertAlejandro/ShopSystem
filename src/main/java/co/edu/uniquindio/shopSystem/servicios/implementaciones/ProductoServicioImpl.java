@@ -191,7 +191,7 @@ public class ProductoServicioImpl implements ProductoServicio {
     }
 
     @Override
-    public void aplicarOrdenAbastecimiento(String idOrden) throws Exception{
+    public void aplicarOrdenAbastecimiento(String idOrden) throws Exception {
 
         ArrayList<Inventario> productosAlteradosInventarios = new ArrayList<>();
         ArrayList<Producto> productosAlteradosTienda = new ArrayList<>();
@@ -199,11 +199,11 @@ public class ProductoServicioImpl implements ProductoServicio {
         Reabastecimiento reabastecimiento = reabastecimientoRepo.findById(idOrden)
                 .orElseThrow(() -> new Exception("La orden de reabastecimiento no existe."));
 
-        if (reabastecimiento.getEstado() == EstadoReabastecimiento.ENTREGADO){
+        if (reabastecimiento.getEstado() == EstadoReabastecimiento.ENTREGADO) {
             throw new Exception("La orden de reabastecimiento ya fue entregada.");
         }
 
-        if (reabastecimiento.getEstado() == EstadoReabastecimiento.CANCELADO){
+        if (reabastecimiento.getEstado() == EstadoReabastecimiento.CANCELADO) {
             throw new Exception("La orden de reabastecimiento ya fue cancelada.");
         }
 
@@ -214,31 +214,36 @@ public class ProductoServicioImpl implements ProductoServicio {
 
             Optional<Producto> productoTiendaOptional = productoRepo.buscarPorReferencia(productoOrdenado.getReferenciaProducto());
 
-            Producto productoTienda = new Producto();
-            if (productoTiendaOptional.isEmpty()) {
-                CrearProductoDTO crearProductoDTO = new CrearProductoDTO(
-                        productoInventario.getReferencia(),
-                        productoInventario.getNombre(),
-                        productoInventario.getTipoProducto(),
-                        productoInventario.getUrlImagen(),
-                        productoOrdenado.getCantidad(),
-                        productoInventario.getPrecio(),
-                        productoInventario.getDescripcion()
-                );
-                crearProducto(crearProductoDTO); // Asume que devuelve el producto creado
-            } else {
-                productoTienda = productoTiendaOptional.get();
-            }
+            Producto productoTienda;
 
             if (productoInventario.getUnidades() < productoOrdenado.getCantidad()) {
                 throw new Exception("La cantidad solicitada del producto " + productoInventario.getNombre() + " no se encuentra disponible.");
             }
 
+            if (productoTiendaOptional.isEmpty()) {
+                productoTienda = new Producto();
+                productoTienda.setNombre(productoOrdenado.getNombreProducto());
+                productoTienda.setReferencia(productoOrdenado.getReferenciaProducto());
+                productoTienda.setDescripcion(productoInventario.getDescripcion());
+                productoTienda.setTipoProducto(productoInventario.getTipoProducto());
+                productoTienda.setUrlImagen(productoInventario.getUrlImagen());
+                productoTienda.setUnidades(productoOrdenado.getCantidad());
+                productoTienda.setPrecio(productoInventario.getPrecio());
+            } else {
+                productoTienda = productoTiendaOptional.get();
+                productoTienda.setUnidades(productoTienda.getUnidades() + productoOrdenado.getCantidad());
+            }
+
             productoInventario.setUnidades(productoInventario.getUnidades() - productoOrdenado.getCantidad());
-            productoTienda.setUnidades(productoTienda.getUnidades() + productoOrdenado.getCantidad());
 
             productosAlteradosInventarios.add(productoInventario);
             productosAlteradosTienda.add(productoTienda);
+        }
+
+        // Impresión de los productos antes de guardar
+        for (Producto producto : productosAlteradosTienda) {
+            System.out.println("Productos que se van a cargar a la tienda:");
+            System.out.println(producto.getNombre() + " " + producto.getUnidades() + " " + producto.getPrecio());
         }
 
         productoRepo.saveAll(productosAlteradosTienda);
@@ -247,6 +252,7 @@ public class ProductoServicioImpl implements ProductoServicio {
         reabastecimiento.setEstado(EstadoReabastecimiento.ENTREGADO);
         reabastecimientoRepo.save(reabastecimiento);
     }
+
 
 
 }
