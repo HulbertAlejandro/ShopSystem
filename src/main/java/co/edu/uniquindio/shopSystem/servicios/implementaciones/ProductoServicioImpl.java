@@ -219,7 +219,6 @@ public class ProductoServicioImpl implements ProductoServicio {
             Producto productoTienda = new Producto();
             if (productoTiendaOptional.isEmpty()) {
                 Producto crearProducto = new Producto();
-                crearProducto.setCodigo(productoOrdenado.getReferenciaProducto());
                 crearProducto.setNombre(productoOrdenado.getNombreProducto());
                 crearProducto.setReferencia(productoOrdenado.getReferenciaProducto());
                 crearProducto.setDescripcion(productoInventario.getDescripcion());
@@ -241,6 +240,13 @@ public class ProductoServicioImpl implements ProductoServicio {
 
             productosAlteradosInventarios.add(productoInventario);
             productosAlteradosTienda.add(productoTienda);
+        }
+
+        System.out.println(productosAlteradosInventarios);
+
+        for (Producto producto : productosAlteradosTienda){
+            System.out.println("Productos que se van a cargar a la tienda: " );
+            System.out.println(producto.getNombre() + " " + producto.getUnidades() + " " + producto.getPrecio());
         }
 
         productoRepo.saveAll(productosAlteradosTienda);
