@@ -290,9 +290,9 @@ public class OrdenServicioImpl implements OrdenServicio {
         MercadoPagoConfig.setAccessToken("APP_USR-6804257661611202-040220-21c5efb630df7224dc0e46b3e957cf3a-2368856858");
 
         PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                .success("https://shop-system-frontend-822c9.web.app/api/auth/inicio")
-                .failure("https://shop-system-frontend-822c9.web.app/api/auth/pago-fallido")
-                .pending("https://shop-system-frontend-822c9.web.app/api/auth/pago-pendiente")
+                .success("https://shop-system-frontend-822c9.web.app")
+                .failure("https://shop-system-frontend-822c9.web.app")
+                .pending("https://shop-system-frontend-822c9.web.app")
                 .build();
 
         PreferenceRequest preferenceRequest = PreferenceRequest.builder()
