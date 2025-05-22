@@ -299,7 +299,7 @@ public class OrdenServicioImpl implements OrdenServicio {
                 .backUrls(backUrls)
                 .items(itemsPasarela)
                 .metadata(Map.of("id_orden", ordenGuardada.getId()))
-                .notificationUrl("https://shop-system-frontend-822c9.web.app/api/auth/mercadopago/notificacion")
+                .notificationUrl("https://shopsystem.onrender.com/api/auth/mercadopago/notificacion")
                 .build();
 
         PreferenceClient client = new PreferenceClient();
