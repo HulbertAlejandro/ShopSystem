@@ -1,0 +1,27 @@
+name: Backend - Spring Boot CI (Gradle)
+
+on:
+  push:
+    branches: [ "main", "render-copy" ]
+  pull_request:
+    branches: [ "main", "render-copy" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Configurar Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Dar permisos a gradlew
+        run: chmod +x gradlew
+
+      - name: Construir y correr pruebas
+        run: ./gradlew build
